@@ -1,6 +1,6 @@
 # Improving Generative AI Systems through Prompt Optimization
 
-A modular pipeline to improve generative AI reliability using prompt optimization and chunk-based processing.
+A modular pipeline to improve the reliability of generative AI systems using prompt optimization and chunk-based processing, evaluated through BLEU and ROUGE metrics.
 
 ## Overview
 This project improves the reliability of generative AI models by:
