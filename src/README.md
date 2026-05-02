@@ -20,7 +20,7 @@ This project improves the reliability of generative AI models by:
 ---
 
 ## Dataset
-Custom dataset of articles categorized by length.
+A curated dataset of text articles categorized based on length (short, medium, long) to evaluate model performance under varying input sizes.
 
 ---
 
@@ -30,9 +30,13 @@ Evaluation results are stored in the `results/` directory and include:
 - ROUGE scores  
 - Graph visualizations  
 
+The results show that chunk-based processing improves consistency for long inputs, while prompt optimization reduces variability in generated outputs.
+
 ---
 
 ## How to Run
+
+Run the pipeline using:
 
 ```bash
 pip install -r requirements.txt
