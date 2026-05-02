@@ -1,6 +1,6 @@
 # Improving Generative AI Systems through Prompt Optimization
 
-## 📌 Overview
+## Overview
 This project improves the reliability of generative AI models by:
 - Reducing prompt sensitivity
 - Handling long text using chunking
@@ -8,30 +8,29 @@ This project improves the reliability of generative AI models by:
 
 ---
 
-## ⚙️ Methodology
-1. Data preprocessing
-2. Chunk-based text splitting
-3. Prompt optimization
-4. Model inference (FLAN-T5 / GPT)
-5. Evaluation using BLEU & ROUGE
+## Methodology
+1. Data preprocessing  
+2. Chunk-based text splitting  
+3. Prompt optimization  
+4. Model inference (FLAN-T5 / GPT)  
+5. Evaluation using BLEU & ROUGE  
 
 ---
 
-## 📂 Dataset
+## Dataset
 Custom dataset of articles categorized by length.
 
 ---
 
-## 📊 Results
-- Evaluation results stored in `results/`
-- Includes:
-  - BLEU scores
-  - ROUGE scores
-  - Graph visualizations
+## Results
+Evaluation results are stored in the `results/` directory and include:
+- BLEU scores  
+- ROUGE scores  
+- Graph visualizations  
 
 ---
 
-## 🚀 How to Run
+## How to Run
 
 ```bash
 pip install -r requirements.txt
