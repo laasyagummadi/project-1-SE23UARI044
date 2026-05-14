@@ -3,2223 +3,1932 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CS5202 — GenAI Prompt Optimization Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<title>CS5202 · GenAI Prompt Optimization System</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #080b12;
-    --bg2: #0d1220;
-    --surface: #111827;
-    --surface2: #1a2235;
-    --border: rgba(255,255,255,0.06);
-    --text: #e8edf5;
-    --text-muted: #6b7a99;
-    --text-dim: #3d4f6b;
-    --accent: #4fc3f7;
-    --accent2: #7c6fdf;
-    --accent3: #f59e0b;
-    --accent4: #34d399;
-    --accent5: #f87171;
-    --glow: rgba(79, 195, 247, 0.15);
-    --glow2: rgba(124, 111, 223, 0.12);
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Background grid */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(79,195,247,0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(79,195,247,0.025) 1px, transparent 1px);
-    background-size: 60px 60px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  body::after {
-    content: '';
-    position: fixed;
-    top: -20%;
-    right: -10%;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(124,111,223,0.08) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* NAV */
-  nav {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: rgba(8,11,18,0.85);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    padding: 0 40px;
-    height: 64px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .nav-brand {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 18px;
-    letter-spacing: -0.5px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .nav-brand .pill {
-    background: linear-gradient(135deg, var(--accent2), var(--accent));
-    color: white;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 20px;
-    letter-spacing: 1px;
-    font-family: 'Space Mono', monospace;
-  }
-
-  .nav-links {
-    display: flex;
-    gap: 4px;
-  }
-
-  .nav-link {
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-muted);
-    transition: all 0.2s;
-    letter-spacing: 0.2px;
-  }
-
-  .nav-link:hover { color: var(--text); background: var(--surface); }
-  .nav-link.active { color: var(--accent); background: rgba(79,195,247,0.1); }
-  .try-it-link { color: var(--accent4) !important; border: 1px solid rgba(52,211,153,0.25); }
-  .try-it-link:hover { background: rgba(52,211,153,0.08) !important; border-color: rgba(52,211,153,0.5); }
-  .try-it-link.active { color: var(--accent4) !important; background: rgba(52,211,153,0.12) !important; border-color: rgba(52,211,153,0.4); }
-
-  /* PAGES */
-  .page { display: none; position: relative; z-index: 1; }
-  .page.active { display: block; }
-
-  /* HERO */
-  .hero {
-    padding: 80px 40px 60px;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-
-  .hero-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(79,195,247,0.08);
-    border: 1px solid rgba(79,195,247,0.2);
-    color: var(--accent);
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    padding: 6px 14px;
-    border-radius: 20px;
-    margin-bottom: 28px;
-    letter-spacing: 1px;
-  }
-
-  .hero-tag::before {
-    content: '';
-    width: 6px; height: 6px;
-    background: var(--accent);
-    border-radius: 50%;
-    animation: pulse-dot 2s infinite;
-  }
-
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.7); }
-  }
-
-  .hero h1 {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: clamp(32px, 5vw, 58px);
-    line-height: 1.08;
-    letter-spacing: -2px;
-    margin-bottom: 20px;
-    background: linear-gradient(135deg, #fff 30%, rgba(255,255,255,0.5));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .hero h1 span {
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .hero-sub {
-    font-size: 17px;
-    color: var(--text-muted);
-    line-height: 1.7;
-    max-width: 560px;
-    font-weight: 300;
-    margin-bottom: 36px;
-  }
-
-  .team-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 48px;
-  }
-
-  .team-chip {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 8px 14px;
-    border-radius: 10px;
-    font-size: 13px;
-  }
-
-  .team-chip .avatar {
-    width: 24px; height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    font-weight: 700;
-  }
-
-  .chip-name { font-weight: 500; }
-  .chip-roll { color: var(--text-muted); font-size: 11px; font-family: 'Space Mono', monospace; }
-
-  /* STAT CARDS */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    max-width: 1100px;
-    margin: 0 auto 48px;
-    padding: 0 40px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 24px;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.2s, border-color 0.2s;
-    cursor: default;
-  }
-
-  .stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent-color, var(--accent)), transparent);
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-
-  .stat-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.12); }
-  .stat-card:hover::before { opacity: 1; }
-
-  .stat-label {
-    font-size: 11px;
-    font-family: 'Space Mono', monospace;
-    color: var(--text-muted);
-    letter-spacing: 1px;
-    margin-bottom: 12px;
-    text-transform: uppercase;
-  }
-
-  .stat-value {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 36px;
-    letter-spacing: -2px;
-    line-height: 1;
-    margin-bottom: 6px;
-  }
-
-  .stat-sub {
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-
-  /* SECTION */
-  .section {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 40px 60px;
-  }
-
-  .section-header {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    margin-bottom: 28px;
-  }
-
-  .section-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 20px;
-    letter-spacing: -0.5px;
-  }
-
-  .section-sub {
-    font-size: 13px;
-    color: var(--text-muted);
-  }
-
-  /* CHART AREA */
-  .chart-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 20px;
-  }
-
-  .chart-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px;
-  }
-
-  .chart-card.full { grid-column: 1 / -1; }
-
-  .chart-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 600;
-    font-size: 15px;
-    margin-bottom: 6px;
-  }
-
-  .chart-desc {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-bottom: 24px;
-  }
-
-  canvas { width: 100% !important; }
-
-  /* VARIANT TABLE */
-  .variant-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 6px;
-  }
-
-  .variant-table th {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    color: var(--text-muted);
-    text-align: left;
-    padding: 0 16px 8px;
-    text-transform: uppercase;
-  }
-
-  .variant-table th:not(:first-child) { text-align: right; }
-
-  .variant-table td {
-    padding: 14px 16px;
-    font-size: 13px;
-    background: var(--surface2);
-    transition: background 0.15s;
-  }
-
-  .variant-table tr:hover td { background: rgba(79,195,247,0.05); }
-
-  .variant-table td:first-child { border-radius: 10px 0 0 10px; }
-  .variant-table td:last-child { border-radius: 0 10px 10px 0; text-align: right; }
-  .variant-table td:not(:first-child):not(:last-child) { text-align: right; }
-
-  .variant-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-weight: 700;
-  }
-
-  .badge-baseline { background: rgba(107,122,153,0.15); color: #6b7a99; }
-  .badge-role_only { background: rgba(79,195,247,0.12); color: var(--accent); }
-  .badge-cot_only { background: rgba(124,111,223,0.12); color: var(--accent2); }
-  .badge-no_fillers { background: rgba(245,158,11,0.12); color: var(--accent3); }
-  .badge-full { background: rgba(52,211,153,0.12); color: var(--accent4); }
-  .badge-chunk_full { background: rgba(248,113,113,0.12); color: var(--accent5); }
-
-  .metric-bar-wrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    justify-content: flex-end;
-  }
-
-  .metric-bar {
-    height: 4px;
-    border-radius: 2px;
-    width: 60px;
-    background: var(--surface);
-    overflow: hidden;
-  }
-
-  .metric-bar-fill { height: 100%; border-radius: 2px; transition: width 1s cubic-bezier(0.4,0,0.2,1); }
-
-  .rank-1 { color: var(--accent4); font-weight: 700; }
-  .rank-2 { color: var(--accent); }
-  .rank-3 { color: var(--accent2); }
-
-  /* PIPELINE PAGE */
-  .pipeline-flow {
-    display: flex;
-    align-items: flex-start;
-    gap: 0;
-    margin-bottom: 40px;
-    position: relative;
-  }
-
-  .pipeline-step {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    cursor: pointer;
-  }
-
-  .pipeline-step:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    top: 28px;
-    left: 50%;
-    right: -50%;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    opacity: 0.3;
-    z-index: 0;
-  }
-
-  .step-icon {
-    width: 56px; height: 56px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-    margin-bottom: 12px;
-    position: relative;
-    z-index: 1;
-    transition: transform 0.2s, box-shadow 0.2s;
-    border: 1px solid var(--border);
-  }
-
-  .pipeline-step:hover .step-icon { transform: scale(1.1); }
-
-  .step-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: var(--text-muted);
-    text-align: center;
-    letter-spacing: 0.5px;
-    max-width: 90px;
-  }
-
-  .step-name {
-    font-family: 'Syne', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    text-align: center;
-    margin-bottom: 4px;
-  }
-
-  /* INTERACTIVE OPTIMIZER */
-  .optimizer-demo {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    overflow: hidden;
-    margin-bottom: 24px;
-  }
-
-  .demo-header {
-    background: var(--bg2);
-    padding: 16px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .demo-title {
-    font-family: 'Space Mono', monospace;
-    font-size: 12px;
-    color: var(--text-muted);
-    letter-spacing: 1px;
-  }
-
-  .demo-controls {
-    display: flex;
-    gap: 8px;
-  }
-
-  .toggle-btn {
-    padding: 6px 12px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text-muted);
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    cursor: pointer;
-    letter-spacing: 0.5px;
-    transition: all 0.2s;
-  }
-
-  .toggle-btn.on {
-    border-color: var(--toggle-color, var(--accent));
-    color: var(--toggle-color, var(--accent));
-    background: rgba(79,195,247,0.08);
-  }
-
-  .demo-body {
-    padding: 24px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-  }
-
-  .prompt-box {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-  }
-
-  .prompt-box-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-    text-transform: uppercase;
-  }
-
-  .prompt-input {
-    background: transparent;
-    border: none;
-    color: var(--text);
-    font-family: 'Space Mono', monospace;
-    font-size: 12px;
-    line-height: 1.7;
-    width: 100%;
-    resize: none;
-    outline: none;
-    height: 120px;
-  }
-
-  .prompt-output {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    line-height: 1.8;
-    color: var(--text);
-    white-space: pre-wrap;
-    word-break: break-word;
-    min-height: 120px;
-  }
-
-  .highlight-role { color: var(--accent); }
-  .highlight-cot { color: var(--accent2); }
-  .highlight-stripped { text-decoration: line-through; color: var(--text-muted); opacity: 0.5; }
-
-  /* METRICS PAGE */
-  .metric-explainer {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 32px;
-  }
-
-  .metric-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px;
-    transition: border-color 0.2s, transform 0.2s;
-    cursor: default;
-  }
-
-  .metric-card:hover { border-color: rgba(255,255,255,0.12); transform: translateY(-2px); }
-
-  .metric-icon {
-    font-size: 24px;
-    margin-bottom: 10px;
-  }
-
-  .metric-name {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 15px;
-    margin-bottom: 6px;
-  }
-
-  .metric-desc {
-    font-size: 12px;
-    color: var(--text-muted);
-    line-height: 1.6;
-  }
-
-  /* CHUNK VISUALIZER */
-  .chunk-viz {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px;
-    margin-bottom: 20px;
-  }
-
-  .chunk-blocks {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 16px;
-  }
-
-  .chunk-row {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-  }
-
-  .chunk-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: var(--text-muted);
-    width: 70px;
-    flex-shrink: 0;
-  }
-
-  .sent-block {
-    height: 28px;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 9px;
-    font-family: 'Space Mono', monospace;
-    flex: 1;
-    transition: opacity 0.3s;
-    cursor: default;
-    position: relative;
-  }
-
-  .sent-block:hover::after {
-    content: attr(data-tip);
-    position: absolute;
-    bottom: 110%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 10px;
-    white-space: nowrap;
-    color: var(--text);
-    z-index: 10;
-  }
-
-  /* FOOTER */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 32px 40px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    max-width: 1100px;
-    margin: 0 auto;
-    color: var(--text-dim);
-    font-size: 12px;
-    font-family: 'Space Mono', monospace;
-  }
-
-  /* ANIMATIONS */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .fade-up {
-    animation: fadeUp 0.5s ease both;
-  }
-
-  .fade-up-1 { animation-delay: 0.05s; }
-  .fade-up-2 { animation-delay: 0.1s; }
-  .fade-up-3 { animation-delay: 0.15s; }
-  .fade-up-4 { animation-delay: 0.2s; }
-  .fade-up-5 { animation-delay: 0.25s; }
-
-  /* TOOLTIP */
-  [data-tooltip] { position: relative; cursor: help; }
-  [data-tooltip]::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 110%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    padding: 6px 10px;
-    border-radius: 8px;
-    font-size: 11px;
-    white-space: nowrap;
-    color: var(--text);
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.2s;
-    z-index: 50;
-  }
-  [data-tooltip]:hover::after { opacity: 1; }
-
-  /* SCROLLBAR */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
-
-  /* ABLATION TABLE */
-  .ablation-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-
-  .ablation-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 18px;
-    transition: all 0.2s;
-    cursor: default;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .ablation-card.best { border-color: rgba(52,211,153,0.3); }
-  .ablation-card.best::before {
-    content: 'BEST';
-    position: absolute;
-    top: 8px; right: 8px;
-    background: rgba(52,211,153,0.15);
-    color: var(--accent4);
-    font-family: 'Space Mono', monospace;
-    font-size: 8px;
-    font-weight: 700;
-    padding: 3px 6px;
-    border-radius: 4px;
-    letter-spacing: 1px;
-  }
-
-  .ablation-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.1); }
-
-  .ablation-variant {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-    letter-spacing: 0.5px;
-  }
-
-  .ablation-score {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 28px;
-    letter-spacing: -1px;
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-
-  .ablation-label {
-    font-size: 10px;
-    color: var(--text-muted);
-    margin-bottom: 12px;
-  }
-
-  .ablation-dots {
-    display: flex;
-    gap: 4px;
-  }
-
-  .dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    border: 1.5px solid;
-  }
-
-  .dot.on { opacity: 1; }
-  .dot.off { opacity: 0.15; }
-</style>
-</head>
-<body>
-
-<nav>
-  <div class="nav-brand">
-    <span>PromptOpt</span>
-    <span class="pill">CS5202</span>
-  </div>
-  <div class="nav-links">
-    <div class="nav-link active" onclick="showPage('overview')">Overview</div>
-    <div class="nav-link" onclick="showPage('pipeline')">Pipeline</div>
-    <div class="nav-link" onclick="showPage('optimizer')">Optimizer</div>
-    <div class="nav-link" onclick="showPage('results')">Results</div>
-    <div class="nav-link" onclick="showPage('metrics')">Metrics</div>
-    <div class="nav-link try-it-link" onclick="showPage('tryit')">✦ Try It</div>
-  </div>
-</nav>
-
-<!-- OVERVIEW PAGE -->
-<div class="page active" id="page-overview">
-  <div class="hero">
-    <div class="hero-tag">CS5202 · GenAI & LLM · Spring 2026</div>
-    <h1>Improving Generative AI<br>through <span>Prompt Optimization</span></h1>
-    <p class="hero-sub">A two-part system that restructures inputs and handles long documents with chunk-based processing to reduce output variance in T5-small summarization.</p>
-    <div class="team-chips">
-      <div class="team-chip">
-        <div class="avatar" style="background:rgba(79,195,247,0.15);color:var(--accent)">LS</div>
-        <div><div class="chip-name">Laasya Sri</div><div class="chip-roll">SE23UARI044</div></div>
-      </div>
-      <div class="team-chip">
-        <div class="avatar" style="background:rgba(124,111,223,0.15);color:var(--accent2)">PR</div>
-        <div><div class="chip-name">Pradham Reddy</div><div class="chip-roll">SE23UARI055</div></div>
-      </div>
-      <div class="team-chip">
-        <div class="avatar" style="background:rgba(245,158,11,0.15);color:var(--accent3)">AK</div>
-        <div><div class="chip-name">Akshitha Kothapally</div><div class="chip-roll">SE23UARI057</div></div>
-      </div>
-      <div class="team-chip">
-        <div class="avatar" style="background:rgba(52,211,153,0.15);color:var(--accent4)">VT</div>
-        <div><div class="chip-name">Vivek TKS</div><div class="chip-roll">SE23UECM060</div></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="stats-row">
-    <div class="stat-card fade-up fade-up-1" style="--accent-color: var(--accent)">
-      <div class="stat-label">Articles Evaluated</div>
-      <div class="stat-value" style="color:var(--accent)">200</div>
-      <div class="stat-sub">CNN/DailyMail test split</div>
-    </div>
-    <div class="stat-card fade-up fade-up-2" style="--accent-color: var(--accent2)">
-      <div class="stat-label">Best ROUGE-L</div>
-      <div class="stat-value" style="color:var(--accent2)">0.298</div>
-      <div class="stat-sub">role_only variant</div>
-    </div>
-    <div class="stat-card fade-up fade-up-3" style="--accent-color: var(--accent3)">
-      <div class="stat-label">Best ROUGE-1</div>
-      <div class="stat-value" style="color:var(--accent3)">0.418</div>
-      <div class="stat-sub">role_only variant</div>
-    </div>
-    <div class="stat-card fade-up fade-up-4" style="--accent-color: var(--accent4)">
-      <div class="stat-label">Prompt Variants</div>
-      <div class="stat-value" style="color:var(--accent4)">5+</div>
-      <div class="stat-sub">+chunk_full for long docs</div>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-header">
-      <div class="section-title">Ablation Study — All Variants</div>
-      <div class="section-sub">Ranked by ROUGE-L (n=200 each except chunk_full)</div>
-    </div>
-    <div class="ablation-grid">
-      <div class="ablation-card best">
-        <div class="ablation-variant">ROLE_ONLY</div>
-        <div class="ablation-score" style="color:var(--accent)">0.418</div>
-        <div class="ablation-label">ROUGE-1 · R-L: 0.298</div>
-        <div class="ablation-dots">
-          <div class="dot on" style="border-color:var(--accent)" data-tooltip="Role prefix"></div>
-          <div class="dot off" style="border-color:var(--accent2)" data-tooltip="CoT suffix"></div>
-          <div class="dot off" style="border-color:var(--accent3)" data-tooltip="Filler removal"></div>
-        </div>
-      </div>
-      <div class="ablation-card">
-        <div class="ablation-variant">COT_ONLY</div>
-        <div class="ablation-score" style="color:var(--accent2)">0.410</div>
-        <div class="ablation-label">ROUGE-1 · R-L: 0.288</div>
-        <div class="ablation-dots">
-          <div class="dot off" style="border-color:var(--accent)"></div>
-          <div class="dot on" style="border-color:var(--accent2)"></div>
-          <div class="dot off" style="border-color:var(--accent3)"></div>
-        </div>
-      </div>
-      <div class="ablation-card">
-        <div class="ablation-variant">BASELINE</div>
-        <div class="ablation-score" style="color:var(--text-muted)">0.410</div>
-        <div class="ablation-label">ROUGE-1 · R-L: 0.284</div>
-        <div class="ablation-dots">
-          <div class="dot off" style="border-color:var(--accent)"></div>
-          <div class="dot off" style="border-color:var(--accent2)"></div>
-          <div class="dot off" style="border-color:var(--accent3)"></div>
-        </div>
-      </div>
-      <div class="ablation-card">
-        <div class="ablation-variant">FULL</div>
-        <div class="ablation-score" style="color:var(--accent4)">0.408</div>
-        <div class="ablation-label">ROUGE-1 · R-L: 0.290</div>
-        <div class="ablation-dots">
-          <div class="dot on" style="border-color:var(--accent)"></div>
-          <div class="dot on" style="border-color:var(--accent2)"></div>
-          <div class="dot on" style="border-color:var(--accent3)"></div>
-        </div>
-      </div>
-      <div class="ablation-card">
-        <div class="ablation-variant">NO_FILLERS</div>
-        <div class="ablation-score" style="color:var(--accent3)">0.403</div>
-        <div class="ablation-label">ROUGE-1 · R-L: 0.286</div>
-        <div class="ablation-dots">
-          <div class="dot off" style="border-color:var(--accent)"></div>
-          <div class="dot off" style="border-color:var(--accent2)"></div>
-          <div class="dot on" style="border-color:var(--accent3)"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="chart-card">
-      <div class="chart-title">Metrics Across All Variants</div>
-      <div class="chart-desc">Averaged over 200 articles — ROUGE-1, ROUGE-2, ROUGE-L, BLEU</div>
-      <canvas id="overviewChart" height="80"></canvas>
-    </div>
-  </div>
-</div>
-
-<!-- PIPELINE PAGE -->
-<div class="page" id="page-pipeline">
-  <div class="hero" style="padding-bottom:20px">
-    <div class="hero-tag">Architecture</div>
-    <h1>End-to-End <span>Pipeline</span></h1>
-    <p class="hero-sub">Six-stage pipeline from raw CNN/DailyMail articles to evaluated summaries with per-sample JSONL logging.</p>
-  </div>
-
-  <div class="section">
-    <div class="pipeline-flow" id="pipelineFlow">
-      <div class="pipeline-step" onclick="selectStep(0)">
-        <div class="step-icon" style="background:rgba(79,195,247,0.1);border-color:rgba(79,195,247,0.3)">📦</div>
-        <div class="step-name">Data Loader</div>
-        <div class="step-label">CNN/DailyMail split</div>
-      </div>
-      <div class="pipeline-step" onclick="selectStep(1)">
-        <div class="step-icon" style="background:rgba(124,111,223,0.1);border-color:rgba(124,111,223,0.3)">🧠</div>
-        <div class="step-name">T5 Model</div>
-        <div class="step-label">Load & configure</div>
-      </div>
-      <div class="pipeline-step" onclick="selectStep(2)">
-        <div class="step-icon" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.3)">🔧</div>
-        <div class="step-name">Prompt Opt.</div>
-        <div class="step-label">5 ablation variants</div>
-      </div>
-      <div class="pipeline-step" onclick="selectStep(3)">
-        <div class="step-icon" style="background:rgba(52,211,153,0.1);border-color:rgba(52,211,153,0.3)">🔪</div>
-        <div class="step-name">Chunk Proc.</div>
-        <div class="step-label">Long docs only</div>
-      </div>
-      <div class="pipeline-step" onclick="selectStep(4)">
-        <div class="step-icon" style="background:rgba(248,113,113,0.1);border-color:rgba(248,113,113,0.3)">📊</div>
-        <div class="step-name">Evaluate</div>
-        <div class="step-label">ROUGE + BLEU</div>
-      </div>
-      <div class="pipeline-step" onclick="selectStep(5)">
-        <div class="step-icon" style="background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.3)">💾</div>
-        <div class="step-name">Results</div>
-        <div class="step-label">JSONL + JSON</div>
-      </div>
-    </div>
-
-    <!-- Step detail card -->
-    <div class="chart-card" id="stepDetail">
-      <div class="chart-title" id="stepTitle">Click a pipeline step to learn more</div>
-      <div class="chart-desc" id="stepDesc">Each step plays a critical role in the end-to-end summarization system.</div>
-      <div id="stepBody" style="font-size:13px;line-height:1.8;color:var(--text-muted);font-family:'Space Mono',monospace;white-space:pre-wrap;margin-top:8px"></div>
-    </div>
-
-    <!-- Chunk Visualizer -->
-    <div class="section-header" style="margin-top:32px">
-      <div class="section-title">Chunk Processing Visualizer</div>
-      <div class="section-sub">8 sentences / chunk · 2 sentence overlap</div>
-    </div>
-    <div class="chunk-viz">
-      <div class="chart-desc">Each colored block = one sentence. Overlapping sentences (shared between chunks) are shown with a lighter shade. This prevents "lost-in-the-middle" degradation.</div>
-      <div class="chunk-blocks" id="chunkViz"></div>
-    </div>
-  </div>
-</div>
-
-<!-- OPTIMIZER PAGE -->
-<div class="page" id="page-optimizer">
-  <div class="hero" style="padding-bottom:20px">
-    <div class="hero-tag">Interactive Demo</div>
-    <h1>Prompt <span>Optimizer</span></h1>
-    <p class="hero-sub">Toggle optimization techniques and see how they transform a raw prompt in real-time. This mirrors the actual <code style="font-size:14px;color:var(--accent)">PromptOptimizer</code> class from the code.</p>
-  </div>
-
-  <div class="section">
-    <div class="optimizer-demo">
-      <div class="demo-header">
-        <div class="demo-title">PROMPT OPTIMIZER — LIVE DEMO</div>
-        <div class="demo-controls">
-          <button class="toggle-btn" id="btnRole" onclick="toggleOpt('role')" style="--toggle-color:var(--accent)">
-            ROLE PREFIX
-          </button>
-          <button class="toggle-btn" id="btnCot" onclick="toggleOpt('cot')" style="--toggle-color:var(--accent2)">
-            CoT SUFFIX
-          </button>
-          <button class="toggle-btn" id="btnFilter" onclick="toggleOpt('filter')" style="--toggle-color:var(--accent3)">
-            FILLER REMOVAL
-          </button>
-        </div>
-      </div>
-      <div class="demo-body">
-        <div class="prompt-box">
-          <div class="prompt-box-label">RAW PROMPT (editable)</div>
-          <textarea class="prompt-input" id="rawPrompt" oninput="updateOptimizer()">Please just basically summarize the following article very simply:</textarea>
-        </div>
-        <div class="prompt-box">
-          <div class="prompt-box-label">OPTIMIZED OUTPUT</div>
-          <div class="prompt-output" id="optimizedOut"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Variant cards -->
-    <div class="section-header">
-      <div class="section-title">All 5 Ablation Variants</div>
-      <div class="section-sub">For the raw prompt above</div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:10px" id="variantCards"></div>
-  </div>
-</div>
-
-<!-- RESULTS PAGE -->
-<div class="page" id="page-results">
-  <div class="hero" style="padding-bottom:20px">
-    <div class="hero-tag">Evaluation Results</div>
-    <h1>Full <span>Results</span></h1>
-    <p class="hero-sub">Aggregated over 200 CNN/DailyMail articles. Run ID: 20260502_105753. Model: T5-small, 4-beam search, no_repeat_ngram=3.</p>
-  </div>
-
-  <div class="section">
-    <div class="chart-grid">
-      <div class="chart-card">
-        <div class="chart-title">ROUGE Scores by Variant</div>
-        <div class="chart-desc">Higher is better — measures n-gram overlap with reference</div>
-        <canvas id="rougeChart" height="200"></canvas>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">BLEU Scores by Variant</div>
-        <div class="chart-desc">Precision-based; lower than ROUGE as expected for summaries</div>
-        <canvas id="bleuChart" height="200"></canvas>
-      </div>
-      <div class="chart-card full">
-        <div class="chart-title">Radar: Multi-Metric Comparison</div>
-        <div class="chart-desc">Visualizing R1, R2, RL, BLEU simultaneously for all 5 base variants</div>
-        <div style="max-width:500px;margin:0 auto">
-          <canvas id="radarChart" height="350"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-header">
-      <div class="section-title">Detailed Results Table</div>
-      <div class="section-sub">n=200 for base variants; n=178 for chunk_full (long docs only)</div>
-    </div>
-
-    <div class="chart-card">
-      <table class="variant-table" id="resultsTable">
-        <thead>
-          <tr>
-            <th>Variant</th>
-            <th>N</th>
-            <th>ROUGE-1</th>
-            <th>ROUGE-2</th>
-            <th>ROUGE-L</th>
-            <th>BLEU</th>
-          </tr>
-        </thead>
-        <tbody id="resultsBody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- METRICS PAGE -->
-<div class="page" id="page-metrics">
-  <div class="hero" style="padding-bottom:20px">
-    <div class="hero-tag">Evaluation Framework</div>
-    <h1>Evaluation <span>Metrics</span></h1>
-    <p class="hero-sub">The project uses four standard NLP evaluation metrics to assess summarization quality against human-written reference summaries.</p>
-  </div>
-
-  <div class="section">
-    <div class="metric-explainer">
-      <div class="metric-card">
-        <div class="metric-icon">🔵</div>
-        <div class="metric-name">ROUGE-1</div>
-        <div class="metric-desc">Unigram overlap between generated and reference. Measures if same individual words appear. Best result: <strong style="color:var(--accent)">0.418</strong> (role_only)</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-icon">🟣</div>
-        <div class="metric-name">ROUGE-2</div>
-        <div class="metric-desc">Bigram (2-word sequence) overlap. More sensitive to fluency and word ordering. Best: <strong style="color:var(--accent2)">0.200</strong> (role_only)</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-icon">🟡</div>
-        <div class="metric-name">ROUGE-L</div>
-        <div class="metric-desc">Longest Common Subsequence — a proxy for sentence-level structure and fluency. Best: <strong style="color:var(--accent3)">0.298</strong> (role_only)</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-icon">🟢</div>
-        <div class="metric-name">BLEU</div>
-        <div class="metric-desc">N-gram precision with brevity penalty. Lowest scores, typical for abstractive summarization. Best: <strong style="color:var(--accent4)">0.135</strong> (role_only)</div>
-      </div>
-    </div>
-
-    <div class="chart-card">
-      <div class="chart-title">Score Distribution Across Variants</div>
-      <div class="chart-desc">All four metrics normalized to [0,1] scale for visual comparison</div>
-      <canvas id="heatmapChart" height="100"></canvas>
-    </div>
-
-    <div class="section-header" style="margin-top:24px">
-      <div class="section-title">Key Findings</div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <div class="chart-card">
-        <div class="chart-title" style="color:var(--accent4)">✓ Role prefix helps most</div>
-        <div style="font-size:13px;color:var(--text-muted);line-height:1.8;margin-top:8px">The <code style="color:var(--accent)">role_only</code> variant consistently scores highest across all metrics, suggesting that structured persona priming is the single most effective optimization. Adding CoT or filler removal on top does not always compound the gains.</div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title" style="color:var(--accent5)">⚠ chunk_full underperforms</div>
-        <div style="font-size:13px;color:var(--text-muted);line-height:1.8;margin-top:8px">Chunk-based processing (recursive merge) yields lower ROUGE scores than direct summarization on long documents. This is likely due to the recursive second-pass compressing too aggressively with T5-small's 512-token limit. A stronger model (T5-base, FLAN-T5) would mitigate this.</div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title" style="color:var(--accent2)">→ CoT adds marginal benefit</div>
-        <div style="font-size:13px;color:var(--text-muted);line-height:1.8;margin-top:8px">Chain-of-thought prompting improves R1 vs. baseline (0.410 vs 0.410) but is nearly equivalent. T5-small may lack the capacity to truly leverage CoT reasoning steps; this technique shows stronger gains on larger models like GPT-3 or FLAN-T5-XXL.</div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title" style="color:var(--accent3)">∅ Filler removal is neutral</div>
-        <div style="font-size:13px;color:var(--text-muted);line-height:1.8;margin-top:8px">Removing filler words ("please", "just", "basically") from the instruction prompt has minimal measurable effect at this scale. T5-small appears robust to instruction noise. May show larger effects in few-shot or fine-tuned settings.</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- TRY IT PAGE -->
-<div class="page" id="page-tryit">
-  <div class="hero" style="padding-bottom:20px">
-    <div class="hero-tag">Live Demo · Powered by Claude AI</div>
-    <h1>Try the <span>Summarizer</span></h1>
-    <p class="hero-sub">Paste any article or text below. The system applies all 5 prompt variants from the ablation study and generates real summaries using Claude AI — just like the assignment pipeline.</p>
-  </div>
-
-  <div class="section">
-    <!-- Input panel -->
-    <div class="tryit-panel">
-      <div class="tryit-input-wrap">
-        <div class="tryit-input-header">
-          <div style="display:flex;align-items:center;gap:10px">
-            <span class="tryit-label">YOUR ARTICLE</span>
-            <span id="wordCountBadge" class="word-count-badge">0 words</span>
-            <span id="longDocBadge" class="long-doc-badge" style="display:none">📄 Long Doc</span>
-          </div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <button class="sample-btn" onclick="loadSample('news')">Load News Sample</button>
-            <button class="sample-btn" onclick="loadSample('tech')">Load Tech Sample</button>
-            <button class="sample-btn" onclick="clearInput()">Clear</button>
-          </div>
-        </div>
-        <textarea
-          id="articleInput"
-          class="article-textarea"
-          placeholder="Paste your article, news story, or any text here (min ~50 words for good results)…"
-          oninput="onArticleInput()"
-        ></textarea>
-      </div>
-
-      <!-- Variant selector -->
-      <div class="variant-selector">
-        <div class="tryit-label" style="margin-bottom:12px">SELECT VARIANTS TO RUN</div>
-        <div class="variant-check-row">
-          <label class="variant-check" data-variant="baseline">
-            <input type="checkbox" value="baseline" checked>
-            <span class="vcheck-box" style="--c:#6b7a99"></span>
-            <span class="vcheck-name">baseline</span>
-            <span class="vcheck-desc">No optimization</span>
-          </label>
-          <label class="variant-check" data-variant="role_only">
-            <input type="checkbox" value="role_only" checked>
-            <span class="vcheck-box" style="--c:var(--accent)"></span>
-            <span class="vcheck-name">role_only</span>
-            <span class="vcheck-desc">Role prefix</span>
-          </label>
-          <label class="variant-check" data-variant="cot_only">
-            <input type="checkbox" value="cot_only" checked>
-            <span class="vcheck-box" style="--c:var(--accent2)"></span>
-            <span class="vcheck-name">cot_only</span>
-            <span class="vcheck-desc">Chain-of-thought</span>
-          </label>
-          <label class="variant-check" data-variant="no_fillers">
-            <input type="checkbox" value="no_fillers" checked>
-            <span class="vcheck-box" style="--c:var(--accent3)"></span>
-            <span class="vcheck-name">no_fillers</span>
-            <span class="vcheck-desc">Filler removal</span>
-          </label>
-          <label class="variant-check" data-variant="full">
-            <input type="checkbox" value="full" checked>
-            <span class="vcheck-box" style="--c:var(--accent4)"></span>
-            <span class="vcheck-name">full</span>
-            <span class="vcheck-desc">All combined</span>
-          </label>
-        </div>
-      </div>
-
-      <button class="run-btn" id="runBtn" onclick="runSummarization()">
-        <span id="runBtnIcon">▶</span>
-        <span id="runBtnText">Run Prompt Optimization</span>
-      </button>
-    </div>
-
-    <!-- Results output -->
-    <div id="tryitResults" style="display:none">
-      <div class="section-header" style="margin-top:32px">
-        <div class="section-title">Generated Summaries</div>
-        <div class="section-sub" id="tryitSubtitle"></div>
-      </div>
-
-      <!-- Summary cards grid -->
-      <div id="summaryGrid" class="summary-grid"></div>
-
-      <!-- Comparison table -->
-      <div class="chart-card" style="margin-top:20px" id="comparisonBlock" style="display:none">
-        <div class="chart-title">Prompt Comparison</div>
-        <div class="chart-desc">How each variant transforms your raw instruction before sending to the model</div>
-        <div id="promptComparison" style="display:flex;flex-direction:column;gap:12px;margin-top:16px"></div>
-      </div>
-    </div>
-
-    <!-- Empty state -->
-    <div id="tryitEmpty" class="tryit-empty">
-      <div class="empty-icon">✦</div>
-      <div class="empty-title">Ready to summarize</div>
-      <div class="empty-desc">Paste an article above and click Run to see how each prompt variant performs on your text in real time.</div>
-    </div>
-  </div>
-</div>
-
-<style>
-/* ── TRY IT PAGE STYLES ── */
-.tryit-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  overflow: hidden;
-  margin-bottom: 8px;
+:root {
+  --ink: #0a0c10;
+  --ink2: #111520;
+  --paper: #f4f1eb;
+  --paper2: #ece8df;
+  --paper3: #e2ddd3;
+  --text: #1a1d26;
+  --text2: #4a5068;
+  --text3: #8892a4;
+  --rule: rgba(26,29,38,0.1);
+  --rule2: rgba(26,29,38,0.06);
+  --red: #c0392b;
+  --blue: #1a4a8a;
+  --teal: #1a7a6a;
+  --amber: #b85c00;
+  --purple: #5a3a8a;
+  --green: #1a6a3a;
+  --red-bg: rgba(192,57,43,0.08);
+  --blue-bg: rgba(26,74,138,0.08);
+  --teal-bg: rgba(26,122,106,0.08);
+  --amber-bg: rgba(184,92,0,0.08);
+  --purple-bg: rgba(90,58,138,0.08);
+  --green-bg: rgba(26,106,58,0.08);
+  --shadow: 0 2px 8px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
 }
 
-.tryit-input-wrap {
-  padding: 0;
+*,*::before,*::after { box-sizing: border-box; margin:0; padding:0; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--paper);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.6;
 }
 
-.tryit-input-header {
+/* ── LAYOUT ── */
+.layout { display: flex; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--ink);
+  color: #e8edf5;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg2);
-  flex-wrap: wrap;
-  gap: 10px;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
 }
 
-.tryit-label {
-  font-family: 'Space Mono', monospace;
+.sidebar-brand {
+  padding: 28px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.brand-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 22px;
+  color: #fff;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.brand-sub {
+  font-family: 'Geist Mono', monospace;
   font-size: 10px;
+  color: rgba(255,255,255,0.35);
   letter-spacing: 1.5px;
-  color: var(--text-muted);
+  margin-top: 4px;
   text-transform: uppercase;
 }
 
-.word-count-badge {
-  font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  color: var(--text-muted);
-  background: var(--surface2);
-  padding: 3px 8px;
-  border-radius: 20px;
+.sidebar-nav { padding: 16px 0; flex: 1; }
+
+.nav-section-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.25);
+  text-transform: uppercase;
+  padding: 0 20px 8px;
+  margin-top: 8px;
 }
 
-.long-doc-badge {
-  font-size: 11px;
-  color: var(--accent3);
-  background: rgba(245,158,11,0.1);
-  border: 1px solid rgba(245,158,11,0.2);
-  padding: 3px 8px;
-  border-radius: 20px;
-  font-family: 'Space Mono', monospace;
-}
-
-.sample-btn {
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: 'DM Sans', sans-serif;
-}
-.sample-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text); background: var(--surface2); }
-
-.article-textarea {
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: var(--text);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  line-height: 1.75;
-  padding: 20px 24px;
-  resize: none;
-  outline: none;
-  min-height: 180px;
-  max-height: 320px;
-}
-
-.variant-selector {
-  padding: 20px 24px;
-  border-top: 1px solid var(--border);
-  background: var(--bg2);
-}
-
-.variant-check-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.variant-check {
+.nav-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 10px 20px;
   cursor: pointer;
-  padding: 8px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  transition: all 0.2s;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.55);
+  border-left: 2px solid transparent;
+  transition: all 0.15s;
   user-select: none;
 }
+.nav-item:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
+.nav-item.active { color: #fff; border-left-color: #c8a96e; background: rgba(200,169,110,0.08); }
+.nav-icon { font-size: 14px; opacity: 0.8; }
 
-.variant-check:hover { border-color: rgba(255,255,255,0.12); background: var(--surface2); }
-.variant-check input[type=checkbox] { display: none; }
-
-.vcheck-box {
-  width: 12px; height: 12px;
-  border-radius: 3px;
-  border: 1.5px solid var(--c);
-  background: transparent;
-  transition: background 0.2s;
-  flex-shrink: 0;
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  font-family: 'Geist Mono', monospace;
+  font-size: 9px;
+  color: rgba(255,255,255,0.2);
+  line-height: 1.8;
 }
 
-.variant-check input:checked ~ .vcheck-box {
-  background: var(--c);
+/* ── MAIN ── */
+.main { flex: 1; min-width: 0; overflow-x: hidden; }
+
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── PAGE HEADER ── */
+.page-header {
+  border-bottom: 1px solid var(--rule);
+  padding: 36px 48px 28px;
+  background: var(--paper);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(8px);
 }
 
-.vcheck-name {
-  font-family: 'Space Mono', monospace;
+.page-eyebrow {
+  font-family: 'Geist Mono', monospace;
   font-size: 10px;
-  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.page-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 32px;
+  letter-spacing: -1px;
   color: var(--text);
-  letter-spacing: 0.3px;
+  line-height: 1.1;
 }
 
-.vcheck-desc {
-  font-size: 11px;
-  color: var(--text-muted);
+.page-title span { color: #8a5a1a; font-style: italic; }
+.page-desc { font-size: 14px; color: var(--text2); margin-top: 6px; max-width: 600px; }
+
+/* ── PAGE BODY ── */
+.page-body { padding: 36px 48px 60px; }
+
+/* ── CARDS ── */
+.card {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
 }
 
-.run-btn {
-  width: 100%;
+.card-header {
   padding: 18px 24px;
-  background: linear-gradient(135deg, rgba(52,211,153,0.15), rgba(79,195,247,0.1));
-  border: 1px solid rgba(52,211,153,0.3);
-  border-top: 1px solid rgba(52,211,153,0.2);
-  color: var(--accent4);
-  font-family: 'Syne', sans-serif;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  transition: all 0.2s;
+  border-bottom: 1px solid var(--rule2);
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.run-btn:hover { background: linear-gradient(135deg, rgba(52,211,153,0.22), rgba(79,195,247,0.15)); }
-.run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.run-btn .spinner {
-  width: 14px; height: 14px;
-  border: 2px solid rgba(52,211,153,0.3);
-  border-top-color: var(--accent4);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+.card-title {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text2);
+  font-weight: 500;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+.card-body { padding: 24px; }
 
-/* Summary grid */
-.summary-grid {
+/* ── STAT STRIP ── */
+.stat-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 28px;
+  background: #fff;
+  box-shadow: var(--shadow);
 }
 
-.summary-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+.stat-item {
+  padding: 24px;
+  border-right: 1px solid var(--rule2);
+  position: relative;
+}
+.stat-item:last-child { border-right: none; }
+
+.stat-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 8px;
+}
+
+.stat-val {
+  font-family: 'Instrument Serif', serif;
+  font-size: 38px;
+  letter-spacing: -2px;
+  color: var(--text);
+  line-height: 1;
+}
+
+.stat-sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
+
+.stat-accent {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--accent-color, #c8a96e);
+}
+
+/* ── GRIDS ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+.grid-5 { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; }
+
+/* ── TEXTAREA / INPUT ── */
+textarea, input[type=text], input[type=number], select {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+textarea:focus, input:focus, select:focus {
+  border-color: rgba(26,29,38,0.3);
+  box-shadow: 0 0 0 3px rgba(26,29,38,0.06);
+}
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: all 0.15s;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+.btn-primary:hover { background: #1e2330; }
+.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-secondary {
+  background: var(--paper2);
+  color: var(--text2);
+  border-color: var(--rule);
+}
+.btn-secondary:hover { background: var(--paper3); color: var(--text); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text2);
+  border-color: var(--rule);
+}
+.btn-ghost:hover { background: var(--paper2); }
+
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-lg { padding: 14px 28px; font-size: 15px; font-weight: 600; }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.badge-baseline  { background: rgba(74,80,104,0.1); color: #4a5068; }
+.badge-role_only { background: var(--blue-bg); color: var(--blue); }
+.badge-cot_only  { background: var(--purple-bg); color: var(--purple); }
+.badge-no_fillers{ background: var(--amber-bg); color: var(--amber); }
+.badge-full      { background: var(--green-bg); color: var(--green); }
+.badge-chunk_full{ background: var(--red-bg); color: var(--red); }
+
+/* ── PROGRESS BAR ── */
+.prog-bar {
+  height: 5px;
+  background: var(--paper2);
+  border-radius: 3px;
   overflow: hidden;
-  animation: fadeUp 0.4s ease both;
+}
+.prog-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── DIVIDER ── */
+.divider { height: 1px; background: var(--rule2); margin: 24px 0; }
+
+/* ── TAGS ── */
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  background: var(--paper2);
+  border: 1px solid var(--rule);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Geist Mono', monospace;
+}
+.tag:hover { background: var(--paper3); border-color: rgba(26,29,38,0.2); }
+.tag.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* ── SUMMARY CARD ── */
+.sum-card {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
 }
 
-.summary-card-header {
+.sum-card-top {
   padding: 14px 18px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--rule2);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--bg2);
+  background: var(--paper);
 }
 
-.summary-card-body {
-  padding: 16px 18px;
+.sum-card-body {
+  padding: 18px;
   flex: 1;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.75;
   color: var(--text);
   min-height: 80px;
 }
 
-.summary-card-body.loading {
+.sum-card-body.loading {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--text-muted);
-  font-size: 12px;
-  font-family: 'Space Mono', monospace;
+  color: var(--text3);
+  font-size: 13px;
+  font-family: 'Geist Mono', monospace;
 }
 
-.summary-card-footer {
+.sum-card-foot {
   padding: 10px 18px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--rule2);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--bg2);
+  background: var(--paper);
 }
 
-.card-meta {
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  color: var(--text-dim);
-  letter-spacing: 0.5px;
+.sum-meta {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
 }
 
-.copy-btn {
-  font-size: 11px;
-  color: var(--text-muted);
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 4px 10px;
-  cursor: pointer;
-  font-family: 'Space Mono', monospace;
-  transition: all 0.2s;
-}
-.copy-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
-.copy-btn.copied { color: var(--accent4); border-color: rgba(52,211,153,0.3); }
-
-/* Prompt comparison */
-.prompt-compare-row {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.prom-row-header {
-  padding: 10px 16px;
-  background: var(--bg2);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.prom-row-body {
-  padding: 12px 16px;
-  font-family: 'Space Mono', monospace;
-  font-size: 11px;
-  line-height: 1.7;
-  color: var(--text-muted);
-  white-space: pre-wrap;
-  word-break: break-word;
-  max-height: 100px;
-  overflow: hidden;
-  position: relative;
-}
-
-.prom-row-body::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 30px;
-  background: linear-gradient(transparent, var(--surface));
-}
-
-/* Empty state */
-.tryit-empty {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--text-dim);
-}
-
-.empty-icon {
-  font-size: 40px;
-  margin-bottom: 16px;
-  opacity: 0.3;
-}
-
-.empty-title {
-  font-family: 'Syne', sans-serif;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-}
-
-.empty-desc {
-  font-size: 13px;
-  max-width: 400px;
-  margin: 0 auto;
-  line-height: 1.7;
-}
-
-/* Pulse loading dots */
-.loading-dots span {
+/* ── LOADING DOTS ── */
+.dots span {
   display: inline-block;
   width: 5px; height: 5px;
   border-radius: 50%;
-  background: var(--accent4);
-  animation: blink 1.2s infinite;
+  background: var(--text3);
+  animation: dotblink 1.2s infinite;
   margin: 0 2px;
 }
-.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
-.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+.dots span:nth-child(2) { animation-delay: 0.2s; }
+.dots span:nth-child(3) { animation-delay: 0.4s; }
 
-@keyframes blink {
-  0%, 80%, 100% { opacity: 0.15; transform: scale(0.8); }
-  40% { opacity: 1; transform: scale(1); }
+@keyframes dotblink {
+  0%,80%,100% { opacity:0.15; transform: scale(0.8); }
+  40% { opacity:1; transform: scale(1); }
 }
 
-/* Error state */
-.error-card {
-  background: rgba(248,113,113,0.08);
-  border: 1px solid rgba(248,113,113,0.2);
-  border-radius: 12px;
-  padding: 16px 20px;
-  color: var(--accent5);
+.spinner {
+  width: 14px; height: 14px;
+  border: 2px solid var(--rule);
+  border-top-color: var(--text2);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── TABS ── */
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--rule); margin-bottom: 24px; }
+.tab {
+  padding: 10px 20px;
   font-size: 13px;
-  font-family: 'Space Mono', monospace;
+  font-weight: 500;
+  color: var(--text3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  margin-bottom: -1px;
 }
-</style>
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--text); border-bottom-color: var(--ink); }
 
-<footer>
-  <span>CS5202 — GenAI & LLM · Spring 2026 · Dept. of CS & AI</span>
-  <span>T5-small · CNN/DailyMail · ROUGE + BLEU · seed=42</span>
-</footer>
+/* ── TABLE ── */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  text-align: left;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--rule);
+  font-weight: 500;
+}
+.data-table td {
+  padding: 12px 16px;
+  font-size: 13.5px;
+  border-bottom: 1px solid var(--rule2);
+  vertical-align: middle;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--paper); }
+
+/* ── VARIANT CHECKBOX ── */
+.vcheck {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 9px;
+  border: 1.5px solid var(--rule);
+  cursor: pointer;
+  transition: all 0.15s;
+  background: #fff;
+  user-select: none;
+}
+.vcheck:hover { border-color: rgba(26,29,38,0.2); background: var(--paper); }
+.vcheck input { display: none; }
+.vcheck-dot {
+  width: 12px; height: 12px;
+  border-radius: 3px;
+  border: 1.5px solid var(--dot-color, var(--text3));
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.vcheck input:checked ~ .vcheck-dot { background: var(--dot-color, var(--text3)); }
+.vcheck.checked { border-color: var(--dot-color); background: rgba(0,0,0,0.015); }
+
+/* ── CHUNK VISUALIZER ── */
+.chunk-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.chunk-row-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+  width: 60px;
+  flex-shrink: 0;
+}
+.sent-seg {
+  height: 22px;
+  border-radius: 4px;
+  flex: 1;
+  font-size: 8px;
+  font-family: 'Geist Mono', monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  transition: opacity 0.2s;
+}
+
+/* ── CODE BLOCK ── */
+pre {
+  background: var(--ink);
+  color: #c8d0e0;
+  border-radius: 10px;
+  padding: 18px 20px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+code {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  background: var(--paper2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--red);
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  background: var(--ink);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 999;
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  pointer-events: none;
+  max-width: 320px;
+  box-shadow: var(--shadow-lg);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(12px); }
+  to { opacity:1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 0.4s ease both; }
+.d1 { animation-delay: 0.05s; } .d2 { animation-delay: 0.1s; }
+.d3 { animation-delay: 0.15s; } .d4 { animation-delay: 0.2s; }
+.d5 { animation-delay: 0.25s; }
+
+/* ── PIPELINE STEPS ── */
+.pipe-steps { display: flex; align-items: flex-start; gap: 0; margin-bottom: 32px; }
+.pipe-step { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; cursor: pointer; }
+.pipe-step:not(:last-child)::after {
+  content: ''; position: absolute;
+  top: 24px; left: 50%; right: -50%;
+  height: 1px;
+  background: var(--rule);
+  z-index: 0;
+}
+.pipe-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  border: 1.5px solid var(--rule);
+  background: #fff;
+  position: relative; z-index: 1;
+  transition: all 0.2s;
+  box-shadow: var(--shadow);
+}
+.pipe-step.sel .pipe-icon { border-color: var(--ink); background: var(--ink); font-size: 18px; }
+.pipe-step:hover .pipe-icon { transform: scale(1.08); }
+.pipe-label { font-size: 11px; color: var(--text3); text-align: center; margin-top: 8px; font-family: 'Geist Mono', monospace; }
+.pipe-name { font-size: 12px; font-weight: 600; text-align: center; margin-top: 2px; }
+
+/* ── METRIC BADGE ── */
+.metric-row { display: flex; align-items: center; gap: 8px; }
+.metric-val { font-family: 'Geist Mono', monospace; font-size: 13px; min-width: 50px; text-align: right; }
+
+/* ── EMPTY STATE ── */
+.empty {
+  text-align: center;
+  padding: 64px 24px;
+  color: var(--text3);
+}
+.empty-icon { font-size: 36px; margin-bottom: 14px; opacity: 0.4; }
+.empty-title { font-size: 16px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+.empty-desc { font-size: 13px; max-width: 360px; margin: 0 auto; line-height: 1.7; }
+
+/* ── ERROR ── */
+.err-box {
+  background: var(--red-bg);
+  border: 1px solid rgba(192,57,43,0.2);
+  border-radius: 9px;
+  padding: 14px 18px;
+  color: var(--red);
+  font-size: 13px;
+  font-family: 'Geist Mono', monospace;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--paper3); border-radius: 3px; }
+
+/* ── RESPONSIVE SIDEBAR ── */
+@media (max-width: 800px) {
+  .sidebar { width: 60px; }
+  .brand-name, .brand-sub, .nav-section-label, .nav-item span, .sidebar-footer { display: none; }
+  .nav-item { justify-content: center; padding: 12px; }
+  .page-header, .page-body { padding-left: 24px; padding-right: 24px; }
+  .grid-2, .grid-3, .grid-5 { grid-template-columns: 1fr; }
+  .stat-strip { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── HIGHLIGHT ── */
+.hl-role { color: var(--blue); font-weight: 600; }
+.hl-cot { color: var(--purple); font-weight: 600; }
+.hl-stripped { text-decoration: line-through; color: var(--text3); opacity: 0.6; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-name">PromptOpt</div>
+    <div class="brand-sub">CS5202 · Spring 2026</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Explore</div>
+    <div class="nav-item active" onclick="nav('overview')"><span class="nav-icon">◈</span><span>Overview</span></div>
+    <div class="nav-item" onclick="nav('pipeline')"><span class="nav-icon">⟶</span><span>Pipeline</span></div>
+    <div class="nav-item" onclick="nav('optimizer')"><span class="nav-icon">⌥</span><span>Optimizer</span></div>
+    <div class="nav-section-label">Run</div>
+    <div class="nav-item" onclick="nav('summarize')"><span class="nav-icon">▶</span><span>Summarize</span></div>
+    <div class="nav-item" onclick="nav('evaluate')"><span class="nav-icon">≡</span><span>Evaluate</span></div>
+    <div class="nav-section-label">Results</div>
+    <div class="nav-item" onclick="nav('results')"><span class="nav-icon">◉</span><span>Results</span></div>
+    <div class="nav-item" onclick="nav('dataset')"><span class="nav-icon">⊞</span><span>Dataset</span></div>
+    <div class="nav-section-label">Docs</div>
+    <div class="nav-item" onclick="nav('about')"><span class="nav-icon">◎</span><span>About</span></div>
+  </nav>
+  <div class="sidebar-footer">
+    T5-small · CNN/DailyMail<br>
+    ROUGE + BLEU · seed=42<br>
+    n=200 articles
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<main class="main">
+
+<!-- ════════════════ OVERVIEW ════════════════ -->
+<div class="page active" id="page-overview">
+  <div class="page-header">
+    <div class="page-eyebrow">CS5202 · GenAI & LLM · Spring 2026</div>
+    <div class="page-title">Improving Generative AI via<br><span>Prompt Optimization</span></div>
+    <div class="page-desc">A two-part system: prompt restructuring + chunk-based processing. Evaluated on 200 CNN/DailyMail articles with ROUGE & BLEU.</div>
+  </div>
+  <div class="page-body">
+    <div class="stat-strip fade-up">
+      <div class="stat-item">
+        <div class="stat-label">Articles Evaluated</div>
+        <div class="stat-val">200</div>
+        <div class="stat-sub">CNN/DailyMail test split</div>
+        <div class="stat-accent" style="--accent-color:#c8a96e"></div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Best ROUGE-L</div>
+        <div class="stat-val">0.298</div>
+        <div class="stat-sub">role_only variant</div>
+        <div class="stat-accent" style="--accent-color:var(--blue)"></div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Best ROUGE-1</div>
+        <div class="stat-val">0.418</div>
+        <div class="stat-sub">role_only variant</div>
+        <div class="stat-accent" style="--accent-color:var(--teal)"></div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Variants Tested</div>
+        <div class="stat-val">5+</div>
+        <div class="stat-sub">+chunk_full for long docs</div>
+        <div class="stat-accent" style="--accent-color:var(--purple)"></div>
+      </div>
+    </div>
+
+    <!-- Team -->
+    <div class="card fade-up d1" style="margin-bottom:24px">
+      <div class="card-header">
+        <div class="card-title">Team</div>
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--text3)">Dept. of CS & AI</div>
+      </div>
+      <div class="card-body">
+        <div class="grid-2" style="gap:12px">
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--paper);border-radius:9px;border:1px solid var(--rule2)">
+            <div style="width:38px;height:38px;border-radius:50%;background:var(--blue-bg);color:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:12px;font-weight:600;flex-shrink:0">LS</div>
+            <div><div style="font-weight:600;font-size:14px">Laasya Sri</div><div style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--text3)">SE23UARI044</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--paper);border-radius:9px;border:1px solid var(--rule2)">
+            <div style="width:38px;height:38px;border-radius:50%;background:var(--purple-bg);color:var(--purple);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:12px;font-weight:600;flex-shrink:0">PR</div>
+            <div><div style="font-weight:600;font-size:14px">Pradham Reddy</div><div style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--text3)">SE23UARI055</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--paper);border-radius:9px;border:1px solid var(--rule2)">
+            <div style="width:38px;height:38px;border-radius:50%;background:var(--amber-bg);color:var(--amber);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:12px;font-weight:600;flex-shrink:0">AK</div>
+            <div><div style="font-weight:600;font-size:14px">Akshitha Kothapally</div><div style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--text3)">SE23UARI057</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--paper);border-radius:9px;border:1px solid var(--rule2)">
+            <div style="width:38px;height:38px;border-radius:50%;background:var(--green-bg);color:var(--green);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:12px;font-weight:600;flex-shrink:0">VT</div>
+            <div><div style="font-weight:600;font-size:14px">Vivek TKS</div><div style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--text3)">SE23UECM060</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ablation Results -->
+    <div class="card fade-up d2">
+      <div class="card-header">
+        <div class="card-title">Ablation Study Results</div>
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--text3)">n=200 · sorted by ROUGE-L</div>
+      </div>
+      <div class="card-body" style="padding:0">
+        <table class="data-table" id="overviewTable"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ PIPELINE ════════════════ -->
+<div class="page" id="page-pipeline">
+  <div class="page-header">
+    <div class="page-eyebrow">Architecture</div>
+    <div class="page-title">End-to-End <span>Pipeline</span></div>
+    <div class="page-desc">Six-stage flow from raw CNN/DailyMail data to evaluated summaries. Click any step for implementation details.</div>
+  </div>
+  <div class="page-body">
+    <div class="pipe-steps" id="pipeSteps"></div>
+
+    <div class="card" id="pipeDetail" style="margin-bottom:28px">
+      <div class="card-header">
+        <div class="card-title" id="pipeDetailTitle">Select a step</div>
+      </div>
+      <div class="card-body">
+        <p style="color:var(--text2);font-size:13.5px;margin-bottom:16px" id="pipeDetailDesc">Click any pipeline stage above to see its implementation details and configuration.</p>
+        <pre id="pipeDetailCode" style="display:none"></pre>
+      </div>
+    </div>
+
+    <!-- Chunk Visualizer -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Chunk Processing Visualizer</div>
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--text3)">max_sentences=8 · overlap=2</div>
+      </div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:20px">Each block = one sentence. Overlapping sentences (shared between adjacent chunks, shown lighter) prevent the "lost-in-the-middle" problem.</p>
+        <div id="chunkViz"></div>
+        <div style="display:flex;gap:20px;margin-top:16px;font-size:11px;color:var(--text3);font-family:'Geist Mono',monospace">
+          <span>■ unique to chunk</span>
+          <span>▒ overlap region</span>
+          <span>░ not in chunk</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ OPTIMIZER ════════════════ -->
+<div class="page" id="page-optimizer">
+  <div class="page-header">
+    <div class="page-eyebrow">Interactive Demo</div>
+    <div class="page-title">Prompt <span>Optimizer</span></div>
+    <div class="page-desc">Toggle optimization techniques and watch the prompt transform live. Mirrors the actual <code>PromptOptimizer</code> class.</div>
+  </div>
+  <div class="page-body">
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <div class="card-title">Controls</div>
+        <div style="display:flex;gap:8px" id="optControls">
+          <button class="btn btn-ghost btn-sm" id="btnRole" onclick="toggleOpt('role')" data-on="false">Role Prefix</button>
+          <button class="btn btn-ghost btn-sm" id="btnCot" onclick="toggleOpt('cot')" data-on="false">CoT Suffix</button>
+          <button class="btn btn-ghost btn-sm" id="btnFilter" onclick="toggleOpt('filter')" data-on="false">Filler Removal</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="grid-2" style="gap:20px">
+          <div>
+            <div style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Raw Prompt (editable)</div>
+            <textarea id="rawPrompt" oninput="refreshOptimizer()" style="width:100%;padding:14px;min-height:100px;resize:none;line-height:1.7">Please just basically summarize the following article very simply:</textarea>
+          </div>
+          <div>
+            <div style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Optimized Output</div>
+            <div id="optOut" style="background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:14px;min-height:100px;font-family:'Geist Mono',monospace;font-size:12px;line-height:1.8;white-space:pre-wrap;word-break:break-word"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:12px">All 5 Ablation Variants</div>
+    <div id="variantPreviews" style="display:flex;flex-direction:column;gap:10px"></div>
+  </div>
+</div>
+
+<!-- ════════════════ SUMMARIZE ════════════════ -->
+<div class="page" id="page-summarize">
+  <div class="page-header">
+    <div class="page-eyebrow">Live Inference · Claude AI</div>
+    <div class="page-title">Run <span>Summarization</span></div>
+    <div class="page-desc">Paste any article, select prompt variants, and generate real summaries side-by-side using the Claude API — replicating the assignment pipeline.</div>
+  </div>
+  <div class="page-body">
+    <!-- Input -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <div class="card-title">Article Input</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="loadSample('news')">News sample</button>
+          <button class="btn btn-ghost btn-sm" onclick="loadSample('tech')">Tech sample</button>
+          <button class="btn btn-ghost btn-sm" onclick="loadSample('sci')">Science sample</button>
+          <button class="btn btn-ghost btn-sm" onclick="clearArticle()">Clear</button>
+        </div>
+      </div>
+      <div class="card-body" style="padding:0">
+        <textarea id="articleInput" oninput="onArticleType()" style="width:100%;padding:20px;border:none;border-radius:0;min-height:200px;max-height:360px;resize:none;font-size:14px;line-height:1.8" placeholder="Paste any article or news story here (at least 30 words)…"></textarea>
+        <div style="padding:10px 20px;border-top:1px solid var(--rule2);display:flex;gap:12px;align-items:center;background:var(--paper);border-radius:0 0 12px 12px">
+          <span id="wordCount" style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--text3)">0 words</span>
+          <span id="longDocTag" style="display:none;background:var(--amber-bg);color:var(--amber);font-family:'Geist Mono',monospace;font-size:10px;padding:2px 8px;border-radius:20px;border:1px solid rgba(184,92,0,0.2)">LONG DOC →300w</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Variant picker -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <div class="card-title">Prompt Variants</div>
+        <button class="btn btn-ghost btn-sm" onclick="toggleAll()">Toggle all</button>
+      </div>
+      <div class="card-body">
+        <div class="grid-5" id="variantChecks"></div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-lg" id="runBtn" onclick="runSummarize()" style="width:100%">
+      <span id="runIcon">▶</span> <span id="runTxt">Run Prompt Optimization</span>
+    </button>
+
+    <!-- Output -->
+    <div id="sumOutput" style="margin-top:28px;display:none">
+      <div style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:14px" id="sumSubtitle"></div>
+      <div id="sumGrid" class="grid-2" style="gap:16px;margin-bottom:20px"></div>
+
+      <!-- Prompt comparison -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Prompt Sent to Model (per variant)</div></div>
+        <div class="card-body" style="padding:0" id="promptDiff"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ EVALUATE ════════════════ -->
+<div class="page" id="page-evaluate">
+  <div class="page-header">
+    <div class="page-eyebrow">Scoring · ROUGE + BLEU</div>
+    <div class="page-title">Evaluate <span>Summaries</span></div>
+    <div class="page-desc">Paste a generated summary and its reference. Computes ROUGE-1, ROUGE-2, ROUGE-L and BLEU scores — same logic as <code>evaluate.py</code>.</div>
+  </div>
+  <div class="page-body">
+    <div class="grid-2" style="gap:20px;margin-bottom:20px">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Generated Summary</div></div>
+        <div class="card-body" style="padding:12px">
+          <textarea id="evalGen" style="width:100%;padding:14px;min-height:130px;resize:none;line-height:1.7;font-size:13.5px" placeholder="Paste the model-generated summary here…"></textarea>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Reference Summary</div></div>
+        <div class="card-body" style="padding:12px">
+          <textarea id="evalRef" style="width:100%;padding:14px;min-height:130px;resize:none;line-height:1.7;font-size:13.5px" placeholder="Paste the gold / reference summary here…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:28px">
+      <button class="btn btn-primary" onclick="runEval()"><span id="evalIcon">◉</span> Compute Scores</button>
+      <button class="btn btn-ghost" onclick="loadEvalSample()">Load sample pair</button>
+    </div>
+
+    <div id="evalResults" style="display:none">
+      <div class="stat-strip" id="evalStrip"></div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Score Breakdown</div></div>
+        <div class="card-body" id="evalBreakdown"></div>
+      </div>
+    </div>
+
+    <div id="evalEmpty" class="empty">
+      <div class="empty-icon">◎</div>
+      <div class="empty-title">No scores yet</div>
+      <div class="empty-desc">Enter a generated and reference summary above, then click Compute Scores.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ RESULTS ════════════════ -->
+<div class="page" id="page-results">
+  <div class="page-header">
+    <div class="page-eyebrow">Aggregated · run 20260502_105753</div>
+    <div class="page-title">Full <span>Results</span></div>
+    <div class="page-desc">Averaged over 200 CNN/DailyMail articles. T5-small, 4-beam search, max_new_tokens=150, no_repeat_ngram=3.</div>
+  </div>
+  <div class="page-body">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(this,'rtab-table')">Results Table</div>
+      <div class="tab" onclick="switchTab(this,'rtab-chart')">Bar Charts</div>
+      <div class="tab" onclick="switchTab(this,'rtab-heatmap')">Heatmap</div>
+      <div class="tab" onclick="switchTab(this,'rtab-findings')">Key Findings</div>
+    </div>
+
+    <div id="rtab-table">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">All Variants · Ranked by ROUGE-L</div>
+          <div style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--text3)">chunk_full n=178 (long docs only)</div>
+        </div>
+        <div class="card-body" style="padding:0">
+          <table class="data-table" id="fullTable"></table>
+        </div>
+      </div>
+    </div>
+
+    <div id="rtab-chart" style="display:none">
+      <div class="grid-2" style="gap:20px">
+        <div class="card">
+          <div class="card-header"><div class="card-title">ROUGE Scores</div></div>
+          <div class="card-body"><canvas id="rougeChart" height="220"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">BLEU Scores</div></div>
+          <div class="card-body"><canvas id="bleuChart" height="220"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="rtab-heatmap" style="display:none">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Metric Heatmap · All Variants × All Metrics</div></div>
+        <div class="card-body"><canvas id="heatmapChart" height="180"></canvas></div>
+      </div>
+    </div>
+
+    <div id="rtab-findings" style="display:none">
+      <div class="grid-2" style="gap:16px" id="findingsGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ DATASET ════════════════ -->
+<div class="page" id="page-dataset">
+  <div class="page-header">
+    <div class="page-eyebrow">CNN/DailyMail 3.0.0</div>
+    <div class="page-title">Dataset <span>Explorer</span></div>
+    <div class="page-desc">Browse sample articles from the CNN/DailyMail test split. Send any article directly to the Summarizer.</div>
+  </div>
+  <div class="page-body">
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <div class="card-title">Browse Samples</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="filterLong" onchange="filterDataset()" style="padding:6px 10px;font-size:12px;border-radius:7px">
+            <option value="all">All docs</option>
+            <option value="long">Long only (&gt;300w)</option>
+            <option value="short">Short only</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="shuffleDataset()">Shuffle</button>
+        </div>
+      </div>
+      <div class="card-body" style="padding:0" id="datasetList"></div>
+    </div>
+
+    <div style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--text3);text-align:center">
+      Showing 10 of 287,226 test articles · HuggingFace abisee/cnn_dailymail v3.0.0
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ ABOUT ════════════════ -->
+<div class="page" id="page-about">
+  <div class="page-header">
+    <div class="page-eyebrow">Documentation</div>
+    <div class="page-title">About This <span>System</span></div>
+    <div class="page-desc">Full technical documentation of the CS5202 assignment codebase.</div>
+  </div>
+  <div class="page-body">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(this,'atab-arch')">Architecture</div>
+      <div class="tab" onclick="switchTab(this,'atab-dataset')">Dataset</div>
+      <div class="tab" onclick="switchTab(this,'atab-metrics')">Metrics</div>
+      <div class="tab" onclick="switchTab(this,'atab-repro')">Reproducibility</div>
+    </div>
+
+    <div id="atab-arch">
+      <div class="grid-2" style="gap:16px" id="archCards"></div>
+    </div>
+    <div id="atab-dataset" style="display:none">
+      <div id="datasetDocs"></div>
+    </div>
+    <div id="atab-metrics" style="display:none">
+      <div id="metricsDocs"></div>
+    </div>
+    <div id="atab-repro" style="display:none">
+      <div id="reproDocs"></div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-// ─── DATA ──────────────────────────────────────────────────────────────
+'use strict';
+
+// ════════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════════
 const RESULTS = [
-  { variant: 'role_only',   n: 200, r1: 0.4179, r2: 0.2004, rl: 0.2976, bleu: 0.1353 },
-  { variant: 'full',        n: 200, r1: 0.4081, r2: 0.1948, rl: 0.2901, bleu: 0.1295 },
-  { variant: 'cot_only',    n: 200, r1: 0.4100, r2: 0.1920, rl: 0.2879, bleu: 0.1284 },
-  { variant: 'no_fillers',  n: 200, r1: 0.4030, r2: 0.1887, rl: 0.2862, bleu: 0.1250 },
-  { variant: 'baseline',    n: 200, r1: 0.4105, r2: 0.1900, rl: 0.2841, bleu: 0.1263 },
-  { variant: 'chunk_full',  n: 178, r1: 0.3432, r2: 0.1341, rl: 0.2321, bleu: 0.0863 },
+  { variant:'role_only',   n:200, r1:0.4179, r2:0.2004, rl:0.2976, bleu:0.1353 },
+  { variant:'full',        n:200, r1:0.4081, r2:0.1948, rl:0.2901, bleu:0.1295 },
+  { variant:'cot_only',    n:200, r1:0.4100, r2:0.1920, rl:0.2879, bleu:0.1284 },
+  { variant:'no_fillers',  n:200, r1:0.4030, r2:0.1887, rl:0.2862, bleu:0.1250 },
+  { variant:'baseline',    n:200, r1:0.4105, r2:0.1900, rl:0.2841, bleu:0.1263 },
+  { variant:'chunk_full',  n:178, r1:0.3432, r2:0.1341, rl:0.2321, bleu:0.0863 },
 ];
 
-const COLORS = {
-  role_only:  '#4fc3f7',
-  full:       '#34d399',
-  cot_only:   '#7c6fdf',
-  no_fillers: '#f59e0b',
-  baseline:   '#6b7a99',
-  chunk_full: '#f87171',
+const VCOL = {
+  baseline:'#4a5068', role_only:'#1a4a8a', cot_only:'#5a3a8a',
+  no_fillers:'#b85c00', full:'#1a6a3a', chunk_full:'#c0392b',
 };
 
-const STEP_INFO = [
-  {
-    title: 'Data Loader — CNNDailyMailLoader',
-    desc: 'Loads CNN/DailyMail 3.0.0 from HuggingFace and caches to data/sample.jsonl',
-    body: `class CNNDailyMailLoader:
-    split: str = "test"      # train / validation / test
-    sample_size: int = 200   # configurable via CLI
-    long_threshold: int = 300 # words — triggers chunk routing
+const VARIANT_DESC = {
+  baseline:'No optimization — raw prompt as-is',
+  role_only:'Role prefix only — structured persona priming',
+  cot_only:'Chain-of-thought suffix only',
+  no_fillers:'Filler word removal only',
+  full:'All three techniques combined (main system)',
+  chunk_full:'Chunk-based processing on long docs (n=178)',
+};
 
-    def load() -> List[Record]:
-        # Downloads dataset from HuggingFace Hub
-        # Marks each article as is_long = word_count > 300
-        # Returns list of {article, reference, id, is_long, word_count}
-`
-  },
-  {
-    title: 'T5Summarizer — T5-small',
-    desc: 'HuggingFace T5-small with 4-beam search, max 512 input tokens',
-    body: `T5ForConditionalGeneration.from_pretrained("t5-small")
+const PIPELINE_STEPS = [
+  { icon:'📦', name:'Data Loader', label:'HuggingFace', code:
+`class CNNDailyMailLoader:
+    split = "test"           # train | validation | test
+    sample_size = 200        # configurable via CLI
+    min_words = 50           # skip stub articles
+    LONG_DOC_THRESHOLD = 300 # words → triggers chunk routing
 
-generate(
-    max_new_tokens=150,
-    num_beams=4,
-    early_stopping=True,
-    no_repeat_ngram_size=3   # prevents repetition loops
+    def load():
+        raw = load_dataset("cnn_dailymail", "3.0.0", split=split)
+        # Shuffle deterministically (seed=42), then sample
+        # Returns: [{id, article, reference, word_count, is_long}]
+
+    def save_sample(path):
+        # Saves to data/sample.jsonl for reproducibility
+
+    @staticmethod
+    def load_from_file(path):
+        # Loads previously cached JSONL`, desc:'Loads CNN/DailyMail 3.0.0 from HuggingFace Hub, applies deterministic shuffling (seed=42), filters stubs, flags long articles.' },
+
+  { icon:'🧠', name:'T5 Model', label:'HuggingFace', code:
+`T5ForConditionalGeneration.from_pretrained("t5-small")
+T5Tokenizer.from_pretrained("t5-small")
+
+model.generate(
+    max_new_tokens = 150,
+    num_beams      = 4,
+    early_stopping = True,
+    no_repeat_ngram_size = 3,   # prevents repetition
 )
+# Input truncated to 512 tokens
+# Device: CUDA if available, else CPU
+# Swap → "t5-base" or "google/flan-t5-base" for better scores`, desc:'T5-small wraps HuggingFace seq2seq model with 4-beam search. Input is truncated at 512 tokens. No fine-tuning — zero-shot evaluation only.' },
 
-Note: Input truncated to 512 tokens.
-Swap to t5-base / flan-t5-base for stronger baselines.
-`
-  },
-  {
-    title: 'Prompt Optimizer — get_ablation_variants()',
-    desc: 'Creates 5 distinct prompt variants for every article via ablation study',
-    body: `ROLE_PREFIX = "You are a precise summarization assistant..."
+  { icon:'🔧', name:'Prompt Opt.', label:'5 variants', code:
+`ROLE_PREFIX = "You are a precise summarization assistant..."
 COT_SUFFIX  = "Think step by step: identify key ideas first..."
-FILLERS     = ["please", "kindly", "just", "basically", "very", ...]
+FILLERS     = ["please","kindly","just","basically","very",...]
 
-variants = {
-  "baseline"  : raw_prompt + article,
-  "role_only" : ROLE_PREFIX + raw_prompt + article,
-  "cot_only"  : raw_prompt + COT_SUFFIX + article,
-  "no_fillers": strip_fillers(raw_prompt) + article,
-  "full"      : ROLE_PREFIX + strip(raw_prompt) + COT_SUFFIX + article,
-}
-`
-  },
-  {
-    title: 'ChunkProcessor — Overlapping Sentence Splitter',
-    desc: 'Splits long documents (>300 words) into overlapping 8-sentence chunks',
-    body: `SentenceSplitter(max_sentences=8, overlap=2)
+class PromptOptimizer:
+    use_role_prefix: bool
+    use_cot_suffix:  bool
+    remove_fillers:  bool
 
-Example with 12 sentences:
-  chunk 0 → sentences 0–7
-  chunk 1 → sentences 6–13   (2 overlap)
-  chunk 2 → sentences 12–19  (2 overlap)
+    def optimize(raw_prompt) -> str:
+        # 1. Strip filler words via regex (if enabled)
+        # 2. Prepend ROLE_PREFIX (if enabled)
+        # 3. Append COT_SUFFIX (if enabled)
 
-merge_strategy = "recursive"
-  → summarize each chunk → join → re-summarize
-  (prevents context loss in long documents)
-`
-  },
-  {
-    title: 'SummaryEvaluator — ROUGE + BLEU',
-    desc: 'Scores each generated summary against gold reference from CNN/DailyMail',
-    body: `rouge_scorer.RougeScorer(["rouge1","rouge2","rougeL"], use_stemmer=True)
-sentence_bleu(smoothing_function=SmoothingFunction().method4)
+    def build_full_input(raw_prompt, article) -> str:
+        return f"{optimize(raw_prompt)}\n\n---\n\n{article}"
 
-For every (generated, reference) pair:
-  → rouge1.fmeasure, rouge2.fmeasure, rougeL.fmeasure, bleu
-  → appended to results/eval_log_<run_id>.jsonl
-`
-  },
-  {
-    title: 'Results — Aggregated Summary',
-    desc: 'Summary JSON and per-sample JSONL for reproducibility',
-    body: `results/
-  eval_log_20260502_105753.jsonl  ← every sample × variant
-  summary_20260502_105753.json    ← avg scores per variant
+def get_ablation_variants(raw_prompt, article) -> dict:
+    # Returns 5 variants: baseline, role_only, cot_only,
+    #                     no_fillers, full`, desc:'Constructs 5 ablation variants per article. Each variant applies a different subset of role prefix, CoT suffix, filler removal.' },
+
+  { icon:'🔪', name:'Chunk Proc.', label:'long docs', code:
+`class SentenceSplitter:
+    max_sentences = 8
+    overlap       = 2      # shared between adjacent chunks
+
+    def split(text) -> List[str]:
+        # Naive regex sentence tokenizer (no NLTK needed)
+        # Sliding window: step = max_sentences - overlap = 6
+
+class ChunkProcessor:
+    merge_strategy = "recursive"
+    # "concat"    → join chunk summaries with newlines
+    # "recursive" → re-summarize the joined summaries
+
+    def process(document) -> dict:
+        # → chunks, chunk_summaries, final_summary, num_chunks
+        # Only applied to is_long=True articles (>300 words)`, desc:'Splits long documents into 8-sentence overlapping chunks, summarizes each independently, then merges with a recursive second-pass summarization.' },
+
+  { icon:'📊', name:'Evaluate', label:'ROUGE+BLEU', code:
+`class SummaryEvaluator:
+    rouge = RougeScorer(["rouge1","rouge2","rougeL"], use_stemmer=True)
+    smoother = SmoothingFunction().method4
+
+    def rouge_scores(generated, reference) -> dict:
+        # Returns F1 for rouge1, rouge2, rougeL
+
+    def bleu_score(generated, reference) -> float:
+        # sentence_bleu with method4 smoothing
+
+    def evaluate(generated, reference, variant_name, extra_meta):
+        # Computes all metrics + appends to JSONL log
+
+    def evaluate_batch(generated_list, reference_list) -> dict:
+        # Returns averaged scores + per-record logging`, desc:'Computes ROUGE-1/2/L (F1, stemmed) and BLEU (smoothed, method4) for every (generated, reference) pair. Logs everything to JSONL.' },
+
+  { icon:'💾', name:'Results', label:'JSONL+JSON', code:
+`results/
+  eval_log_20260502_105753.jsonl   # every sample × variant
+  summary_20260502_105753.json     # aggregated avg scores
   bar_chart_rouge.png
   bar_chart_bleu.png
   heatmap_metrics.png
   long_vs_short.png
 
-All seeds fixed to 42 (Python, NumPy, PyTorch).
-Run with: python src/pipeline.py --sample 200 --split test
-`
-  }
+# Run:
+python src/pipeline.py --split test --sample 200 --max_new_tokens 150
+python src/visualize_results.py --summary results/summary_<id>.json
+
+# Seeds fixed: random.seed(42), torch.manual_seed(42)
+# Cached data: data/sample.jsonl (use --use_cached to skip download)`, desc:'All results logged to timestamped JSONL for full reproducibility. Summary JSON contains averaged scores. Four plots generated by visualize_results.py.' },
 ];
 
-// ─── NAVIGATION ──────────────────────────────────────────────────────────
-function showPage(id) {
+const FINDINGS = [
+  { color:'var(--green)', icon:'✓', title:'Role prefix helps most', body:'The role_only variant consistently tops all metrics. Structured persona priming ("You are a precise summarization assistant…") is the single most effective technique, giving T5-small a clearer behavioral frame.' },
+  { color:'var(--red)', icon:'⚠', title:'chunk_full underperforms', body:'Recursive chunk merging scores lower than direct summarization. T5-small\'s 512-token limit compresses too aggressively on the second pass. Stronger models (T5-base, FLAN-T5) would benefit more from chunking.' },
+  { color:'var(--purple)', icon:'→', title:'CoT adds marginal gain', body:'cot_only slightly improves ROUGE-1 vs baseline but nearly equals it. Chain-of-thought prompting shows stronger gains on larger models (GPT-3, FLAN-T5-XXL) that can actually execute reasoning steps.' },
+  { color:'var(--amber)', icon:'∅', title:'Filler removal is neutral', body:'Removing "please", "just", "basically" etc. has minimal measurable effect. T5-small is robust to instruction noise at this scale. May show larger effects in few-shot or fine-tuned settings.' },
+];
+
+const ARCH_CARDS = [
+  { title:'prompt_optimizer.py', color:'var(--blue)', body:`Wraps raw user prompts with structure to reduce output variance.\n\n→ Role-priming: adds structured persona prefix\n→ Filler removal: regex strips noise words\n→ CoT injection: appends chain-of-thought hint\n→ get_ablation_variants(): returns all 5 named variants` },
+  { title:'chunk_processor.py', color:'var(--purple)', body:`Handles "lost-in-the-middle" problem for long documents.\n\n→ SentenceSplitter: naive regex, no NLTK required\n→ Sliding window: 8 sentences, 2 overlap → step=6\n→ ChunkProcessor: concat or recursive merge\n→ Accepts any summarize_fn callable (mock-friendly)` },
+  { title:'data_loader.py', color:'var(--teal)', body:`Loads CNN/DailyMail 3.0.0 via HuggingFace datasets.\n\n→ Deterministic shuffle with seed=42\n→ Filters stubs < 50 words\n→ Flags is_long = word_count > 300\n→ JSONL caching for fast re-runs (--use_cached)` },
+  { title:'evaluate.py', color:'var(--amber)', body:`ROUGE-1/2/L + BLEU scoring with full logging.\n\n→ RougeScorer with use_stemmer=True\n→ BLEU with SmoothingFunction.method4\n→ Per-sample JSONL logging with timestamps\n→ compare_variants() helper for batch scoring` },
+  { title:'pipeline.py', color:'var(--red)', body:`Main entry point — orchestrates all modules.\n\n→ Loads data → builds T5Summarizer → runs 5 ablations\n→ Routes long docs through ChunkProcessor\n→ Aggregates + saves summary JSON\n→ CLI: --split, --sample, --max_new_tokens, --use_cached` },
+  { title:'visualize_results.py', color:'var(--green)', body:`Generates all result plots from summary JSON.\n\n→ bar_chart_rouge.png: ROUGE-1/2/L per variant\n→ bar_chart_bleu.png: BLEU per variant\n→ heatmap_metrics.png: all metrics × variants\n→ long_vs_short.png: chunk vs direct on long docs` },
+];
+
+const DATASET_ARTICLES = [
+  { id:'art001', words:412, article:'The International Space Station marked its 25th anniversary of continuous human presence on Saturday, a milestone that scientists say represents humanity\'s longest sustained foothold in space. Astronauts aboard the station celebrated with a video call to Earth and reviewed footage from the first crew\'s arrival in November 2000. NASA officials said the station has hosted more than 270 people from 20 countries and has facilitated thousands of scientific experiments in microgravity. The station, orbiting at roughly 400 kilometers above Earth, was assembled over thirteen years and involved five international space agencies. Its future beyond 2030 remains uncertain as NASA plans to transition low-Earth orbit operations to commercial stations.', ref:'The ISS celebrated 25 years of continuous human habitation, having hosted over 270 astronauts from 20 countries. Its future beyond 2030 is uncertain as NASA plans commercial alternatives.', is_long:true },
+  { id:'art002', words:187, article:'A new study published in Nature found that regular consumption of ultra-processed foods is associated with a 12% higher risk of type 2 diabetes, even after accounting for overall calorie intake and body weight. The research followed over 200,000 adults across eight European countries for more than ten years. Ultra-processed foods — including packaged snacks, ready meals, and sugary drinks — were defined using the NOVA classification system. Researchers said the findings strengthen the case for food labeling reforms and public health guidelines targeting food quality rather than just calorie counts.', ref:'A Nature study found ultra-processed food consumption raises type 2 diabetes risk by 12%, independent of calorie intake and weight, calling for labeling reforms.', is_long:false },
+  { id:'art003', words:328, article:'Volkswagen announced plans to invest €5 billion in a new battery gigafactory in Spain, creating approximately 3,000 direct jobs and up to 30,000 in the supply chain. The factory, located near Valencia, is expected to begin production in 2026 with an annual capacity of 40 gigawatt-hours — enough to power around 500,000 electric vehicles per year. The announcement comes as the German automaker accelerates its pivot away from combustion engines ahead of the EU\'s 2035 ban on new fossil fuel car sales. Local officials welcomed the investment as a boost to a region historically dependent on automotive manufacturing.', ref:'Volkswagen will invest €5bn in a Spanish battery gigafactory near Valencia, creating 3,000 jobs and producing 40 GWh annually by 2026 to support its EV transition.', is_long:true },
+  { id:'art004', words:156, article:'Researchers at Johns Hopkins University have developed a blood test that can detect more than 50 types of cancer with a single draw, achieving an overall sensitivity of 55.4% and a specificity of 99.3%. Called CancerSEEK, the test analyzes circulating tumor DNA and proteins in the bloodstream. It performed best on cancers for which there are currently no standard screening tools, including ovarian, liver, and pancreatic cancers. Scientists cautioned that the test is not yet approved for clinical use and that larger trials are needed to validate the findings before widespread adoption.', ref:'CancerSEEK, a blood test from Johns Hopkins, detects 50+ cancer types with 55.4% sensitivity. It excels at hard-to-screen cancers but awaits clinical approval.', is_long:false },
+  { id:'art005', words:445, article:'The Indian government announced a sweeping reform of its railway network, pledging ₹2.4 trillion in investment over the next five years to upgrade tracks, modernize stations, and introduce 400 new Vande Bharat Express trains. The initiative, unveiled at a press conference by the Railway Minister, aims to reduce average journey times by 30% on major corridors and improve freight capacity by 50%. Officials said the upgrades would include electrification of the remaining 6,000 kilometers of diesel-operated routes and the installation of the Kavach collision-avoidance system across 30,000 kilometers of track. The reform is seen as central to the government\'s broader infrastructure push ahead of the 2024 general elections, with construction contracts worth ₹800 billion already tendered.', ref:'India pledged ₹2.4 trillion to modernize railways over five years, adding 400 Vande Bharat trains, cutting journey times by 30%, and expanding freight capacity by 50%.', is_long:true },
+  { id:'art006', words:212, article:'Scientists have identified a protein that appears to play a key role in the aging process, raising hopes for therapies that could slow cellular deterioration. The protein, called GDF11, was found to decline sharply in older mice, and its restoration appeared to reverse several markers of aging in muscle and heart tissue. The study, published in Science, cautioned that the findings are preliminary and that effects observed in mice do not always translate to humans. Several biotech companies have already begun exploring GDF11-based treatments, though clinical trials in humans are still years away.', ref:'Researchers found the protein GDF11 declines with age; restoring it reversed aging markers in mice. Human applications are years away, but biotech firms are exploring treatments.', is_long:false },
+  { id:'art007', words:380, article:'Amazon Web Services revealed a new family of custom AI chips called Trainium3, designed to reduce the cost of training large language models by up to 40% compared to current GPU-based solutions. The announcement was made at AWS re:Invent, the company\'s annual developer conference in Las Vegas. Trainium3 chips use a novel architecture that allows for more efficient matrix multiplications, the core operation in transformer-based neural network training. AWS said the chips would be available to cloud customers in early 2025, with several major AI research labs already signed up for early access. The launch intensifies competition with Nvidia, which currently dominates the AI accelerator market with its H100 and upcoming B100 GPUs.', ref:'AWS launched Trainium3 AI chips that cut LLM training costs by 40% vs GPUs, using efficient matrix multiply architecture. Available to cloud customers in early 2025.', is_long:true },
+  { id:'art008', words:145, article:'The European Central Bank raised interest rates by 25 basis points to 4%, marking the tenth consecutive increase since July 2022 in its battle against inflation. ECB President Christine Lagarde signaled that this could be the final hike in the current cycle, noting that underlying inflation had begun to ease but remained well above the 2% target. Financial markets reacted positively, with eurozone government bond yields falling and equity indexes rising following the announcement.', ref:'The ECB raised rates to 4% — its tenth hike since July 2022 — with President Lagarde hinting this may be the last as inflation slowly eases toward the 2% target.', is_long:false },
+  { id:'art009', words:510, article:'A coalition of 27 countries signed a landmark agreement at a UN climate summit in Dubai pledging to triple global renewable energy capacity and double energy efficiency improvements by 2030. The deal, brokered after intensive negotiations spanning two weeks, includes commitments from major economies including the United States, China, the European Union, India, and Brazil. The agreement also includes a first-of-its-kind acknowledgment that fossil fuel use must be "transitioned away" from, though critics argued the language fell short of the outright phase-out demanded by vulnerable island nations. The International Energy Agency said meeting the renewable energy targets would require annual investment in clean energy to rise from $1.7 trillion to $4.5 trillion by the end of the decade.', ref:'27 nations pledged at COP28 to triple renewables and double efficiency by 2030 in a deal that acknowledges fossil fuel transition but stops short of a full phase-out.', is_long:true },
+  { id:'art010', words:227, article:'Meta launched a new AI assistant across WhatsApp, Instagram, Messenger, and Facebook in the United States, powered by its Llama 3 large language model. The assistant can answer questions, generate images from text prompts, and help users draft messages. Unlike competitors such as ChatGPT or Gemini, Meta\'s assistant is integrated directly into existing social apps and does not require a separate account or subscription. Meta CEO Mark Zuckerberg said the company aims to build "the most intelligent AI assistant that people can freely use," and noted the assistant would eventually have access to users\' social graph to personalize responses.', ref:'Meta launched a Llama 3-powered AI assistant across WhatsApp, Instagram, Messenger and Facebook — free, no separate account needed — aiming to outpace ChatGPT and Gemini.', is_long:false },
+];
+
+// Sample articles for Summarize page
+const SAMPLES = {
+  news: DATASET_ARTICLES[8].article,
+  tech: DATASET_ARTICLES[6].article,
+  sci:  DATASET_ARTICLES[5].article,
+};
+
+// ════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════
+function nav(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
-  event.currentTarget.classList.add('active');
+  document.querySelector(`.nav-item[onclick="nav('${id}')"]`).classList.add('active');
+
   if (id === 'results') initResultsCharts();
-  if (id === 'metrics') initMetricsCharts();
-  if (id === 'pipeline') initChunkViz();
-  if (id === 'optimizer') updateOptimizer();
+  if (id === 'pipeline') { initPipe(); initChunkViz(); }
+  if (id === 'optimizer') refreshOptimizer();
+  if (id === 'dataset') renderDataset(DATASET_ARTICLES);
+  if (id === 'about') initAbout();
 }
 
-// ─── PIPELINE STEPS ──────────────────────────────────────────────────────
-function selectStep(i) {
-  const info = STEP_INFO[i];
-  document.getElementById('stepTitle').textContent = info.title;
-  document.getElementById('stepDesc').textContent = info.desc;
-  document.getElementById('stepBody').textContent = info.body;
-  document.querySelectorAll('.step-icon').forEach((el, j) => {
-    el.style.transform = j === i ? 'scale(1.15)' : 'scale(1)';
-    el.style.boxShadow = j === i ? '0 0 20px rgba(79,195,247,0.3)' : 'none';
+function switchTab(el, tabId) {
+  const parent = el.closest('.page-body') || el.closest('.main');
+  el.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  // find siblings
+  const allTabs = document.querySelectorAll(`[id^="${tabId.split('-')[0]}-"]`);
+  allTabs.forEach(t => t.style.display = 'none');
+  document.getElementById(tabId).style.display = '';
+
+  if (tabId === 'rtab-chart') initResultsCharts();
+}
+
+// ════════════════════════════════════════════════════════
+// OVERVIEW TABLE
+// ════════════════════════════════════════════════════════
+(function buildOverviewTable() {
+  const maxRL = Math.max(...RESULTS.map(r=>r.rl));
+  const t = document.getElementById('overviewTable');
+  t.innerHTML = `<thead><tr>
+    <th>Variant</th><th>N</th><th>ROUGE-1</th><th>ROUGE-2</th><th>ROUGE-L</th><th>BLEU</th>
+  </tr></thead><tbody>${RESULTS.map((r,i) => {
+    const pct = (r.rl/maxRL*100).toFixed(1);
+    const rank = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    return `<tr>
+      <td><span class="badge badge-${r.variant}">${r.variant}</span></td>
+      <td style="font-family:'Geist Mono',monospace;color:var(--text3)">${r.n}</td>
+      <td style="font-family:'Geist Mono',monospace">${r.r1.toFixed(4)}</td>
+      <td style="font-family:'Geist Mono',monospace">${r.r2.toFixed(4)}</td>
+      <td>
+        <div class="metric-row">
+          <span class="metric-val" style="color:${i<3?VCOL[r.variant]:'var(--text)'}">${r.rl.toFixed(4)}</span>
+          <div class="prog-bar" style="width:80px"><div class="prog-fill" style="width:${pct}%;background:${VCOL[r.variant]}"></div></div>
+          <span style="font-size:12px">${rank}</span>
+        </div>
+      </td>
+      <td style="font-family:'Geist Mono',monospace">${r.bleu.toFixed(4)}</td>
+    </tr>`;
+  }).join('')}</tbody>`;
+})();
+
+// Full results table
+(function buildFullTable() {
+  const maxRL = Math.max(...RESULTS.map(r=>r.rl));
+  const t = document.getElementById('fullTable');
+  t.innerHTML = `<thead><tr>
+    <th>#</th><th>Variant</th><th>Description</th><th>N</th><th>ROUGE-1</th><th>ROUGE-2</th><th>ROUGE-L</th><th>BLEU</th>
+  </tr></thead><tbody>${RESULTS.map((r,i) => {
+    const pct = (r.rl/maxRL*100).toFixed(1);
+    return `<tr>
+      <td style="color:var(--text3);font-family:'Geist Mono',monospace">${i+1}</td>
+      <td><span class="badge badge-${r.variant}">${r.variant}</span></td>
+      <td style="font-size:12px;color:var(--text2);max-width:220px">${VARIANT_DESC[r.variant]}</td>
+      <td style="font-family:'Geist Mono',monospace;color:var(--text3)">${r.n}</td>
+      <td style="font-family:'Geist Mono',monospace">${r.r1.toFixed(4)}</td>
+      <td style="font-family:'Geist Mono',monospace">${r.r2.toFixed(4)}</td>
+      <td><div class="metric-row">
+        <span class="metric-val" style="color:${VCOL[r.variant]}">${r.rl.toFixed(4)}</span>
+        <div class="prog-bar" style="width:70px"><div class="prog-fill" style="width:${pct}%;background:${VCOL[r.variant]}"></div></div>
+      </div></td>
+      <td style="font-family:'Geist Mono',monospace">${r.bleu.toFixed(4)}</td>
+    </tr>`;
+  }).join('')}</tbody>`;
+})();
+
+// Findings
+(function buildFindings(){
+  document.getElementById('findingsGrid').innerHTML = FINDINGS.map(f=>`
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title" style="color:${f.color}">${f.icon} ${f.title}</div>
+      </div>
+      <div class="card-body">
+        <p style="font-size:13.5px;color:var(--text2);line-height:1.75">${f.body}</p>
+      </div>
+    </div>`).join('');
+})();
+
+// ════════════════════════════════════════════════════════
+// PIPELINE
+// ════════════════════════════════════════════════════════
+function initPipe() {
+  const cont = document.getElementById('pipeSteps');
+  if (cont.children.length) return;
+  PIPELINE_STEPS.forEach((s,i) => {
+    const el = document.createElement('div');
+    el.className = 'pipe-step';
+    el.innerHTML = `<div class="pipe-icon">${s.icon}</div>
+      <div class="pipe-name">${s.name}</div>
+      <div class="pipe-label">${s.label}</div>`;
+    el.onclick = () => selectPipeStep(i, el);
+    cont.appendChild(el);
   });
 }
 
-// ─── CHUNK VISUALIZER ────────────────────────────────────────────────────
+function selectPipeStep(i, el) {
+  document.querySelectorAll('.pipe-step').forEach(s => s.classList.remove('sel'));
+  el.classList.add('sel');
+  const s = PIPELINE_STEPS[i];
+  document.getElementById('pipeDetailTitle').textContent = s.name;
+  document.getElementById('pipeDetailDesc').textContent = s.desc;
+  const codeEl = document.getElementById('pipeDetailCode');
+  codeEl.textContent = s.code;
+  codeEl.style.display = 'block';
+}
+
 function initChunkViz() {
-  const container = document.getElementById('chunkViz');
-  if (container.children.length) return;
-  const total = 18;
-  const chunkSize = 8;
-  const overlap = 2;
-  const step = chunkSize - overlap;
+  const cont = document.getElementById('chunkViz');
+  if (cont.children.length) return;
+  const total = 16, maxS = 8, ovl = 2, step = maxS - ovl;
   const chunks = [];
-  for (let i = 0; i < total; i += step) {
-    chunks.push({ start: i, end: Math.min(i + chunkSize - 1, total - 1) });
-    if (i + chunkSize >= total) break;
+  for (let i=0; i<total; i+=step) {
+    chunks.push({ s: i, e: Math.min(i+maxS-1, total-1) });
+    if (i+maxS >= total) break;
   }
-  const chunkColors = ['var(--accent)', 'var(--accent2)', 'var(--accent3)', 'var(--accent4)', 'var(--accent5)'];
+  const colors = ['var(--blue)','var(--purple)','var(--teal)','var(--amber)'];
 
   chunks.forEach((chunk, ci) => {
     const row = document.createElement('div');
     row.className = 'chunk-row';
-    const label = document.createElement('div');
-    label.className = 'chunk-label';
-    label.textContent = `chunk ${ci}`;
-    row.appendChild(label);
+    const lbl = document.createElement('div');
+    lbl.className = 'chunk-row-label';
+    lbl.textContent = `chunk ${ci}`;
+    row.appendChild(lbl);
 
-    for (let s = 0; s < total; s++) {
-      const block = document.createElement('div');
-      block.className = 'sent-block';
-      const inChunk = s >= chunk.start && s <= chunk.end;
-      const isOverlap = chunks.some((c, j) => j !== ci && s >= c.start && s <= c.end && inChunk);
-
+    for (let s=0; s<total; s++) {
+      const inChunk = s >= chunk.s && s <= chunk.e;
+      const isOvl = inChunk && chunks.some((c,j)=>j!==ci && s>=c.s && s<=c.e);
+      const seg = document.createElement('div');
+      seg.className = 'sent-seg';
+      seg.title = `S${s}${isOvl?' (overlap)':''}`;
       if (inChunk) {
-        const alpha = isOverlap ? '0.25' : '0.6';
-        block.style.background = chunkColors[ci % chunkColors.length].replace('var(', '').replace(')', '');
-        block.style.background = `color-mix(in srgb, ${chunkColors[ci % chunkColors.length]} ${isOverlap ? 30 : 70}%, transparent)`;
-        block.style.border = `1px solid ${chunkColors[ci % chunkColors.length]}`;
-        block.title = isOverlap ? `S${s} (overlap)` : `S${s}`;
-        block.textContent = isOverlap ? '↔' : '';
-        block.style.color = chunkColors[ci % chunkColors.length];
-        block.style.fontSize = '9px';
+        seg.style.background = isOvl
+          ? `color-mix(in srgb, ${colors[ci%colors.length]} 25%, transparent)`
+          : `color-mix(in srgb, ${colors[ci%colors.length]} 65%, transparent)`;
+        seg.style.border = `1px solid color-mix(in srgb, ${colors[ci%colors.length]} 50%, transparent)`;
+        seg.textContent = isOvl ? '↔' : `S${s}`;
+        seg.style.color = colors[ci%colors.length];
+        seg.style.fontSize = '8px';
       } else {
-        block.style.opacity = '0.07';
-        block.style.background = 'rgba(255,255,255,0.05)';
+        seg.style.background = 'rgba(0,0,0,0.04)';
+        seg.style.opacity = '0.4';
       }
-      row.appendChild(block);
+      row.appendChild(seg);
     }
-    container.appendChild(row);
+    cont.appendChild(row);
   });
-
-  // Legend
-  const legend = document.createElement('div');
-  legend.style.cssText = 'display:flex;gap:16px;margin-top:16px;font-size:11px;color:var(--text-muted);font-family:Space Mono,monospace;';
-  legend.innerHTML = '<span>↔ = overlap sentence</span><span>█ = unique to chunk</span><span>░ = not in chunk</span>';
-  container.appendChild(legend);
 }
 
-// ─── PROMPT OPTIMIZER ────────────────────────────────────────────────────
-const opts = { role: false, cot: false, filter: false };
-const ROLE_PREFIX = `You are a precise and concise summarization assistant. Your task is to carefully read the following passage and produce a clear, factual, and well-structured summary.\n\n`;
-const COT_SUFFIX = `\n\nThink step by step: identify the key ideas first, then write the summary in your own words.`;
-const FILLERS = ['please', 'kindly', 'just', 'basically', 'actually', 'very', 'really', 'simply'];
+// ════════════════════════════════════════════════════════
+// OPTIMIZER
+// ════════════════════════════════════════════════════════
+const ROLE_PFX = `You are a precise and concise summarization assistant. Your task is to carefully read the following passage and produce a clear, factual, and well-structured summary.\n\n`;
+const COT_SFX = `\n\nThink step by step: identify the key ideas first, then write the summary in your own words.`;
+const FILLERS = ['please','kindly','just','basically','actually','very','really','simply'];
+const OPT = { role:false, cot:false, filter:false };
 
-function toggleOpt(key) {
-  opts[key] = !opts[key];
-  const ids = { role: 'btnRole', cot: 'btnCot', filter: 'btnFilter' };
-  document.getElementById(ids[key]).classList.toggle('on', opts[key]);
-  updateOptimizer();
-}
-
-function updateOptimizer() {
-  let raw = document.getElementById('rawPrompt').value;
-  let out = '';
-
-  if (opts.role) {
-    out += `<span class="highlight-role">${escH(ROLE_PREFIX)}</span>`;
+function toggleOpt(k) {
+  OPT[k] = !OPT[k];
+  const ids = { role:'btnRole', cot:'btnCot', filter:'btnFilter' };
+  const colors = { role:'var(--blue)', cot:'var(--purple)', filter:'var(--amber)' };
+  const btn = document.getElementById(ids[k]);
+  if (OPT[k]) {
+    btn.style.background = colors[k];
+    btn.style.color = '#fff';
+    btn.style.borderColor = 'transparent';
+  } else {
+    btn.style.background = '';
+    btn.style.color = '';
+    btn.style.borderColor = '';
   }
-
-  let prompt = raw;
-  if (opts.filter) {
-    FILLERS.forEach(f => {
-      const re = new RegExp(`\\b${f}\\b`, 'gi');
-      prompt = prompt.replace(re, m => `<span class="highlight-stripped">${m}</span>`);
-    });
-  }
-  out += escH_keep(prompt);
-
-  if (opts.cot) {
-    out += `<span class="highlight-cot">${escH(COT_SUFFIX)}</span>`;
-  }
-
-  document.getElementById('optimizedOut').innerHTML = out || escH(raw);
-
-  // Update variant cards
-  buildVariantCards(raw);
-}
-
-function escH(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function escH_keep(s) {
-  // s may already contain HTML spans from filter
-  return s;
-}
-
-function buildVariantCards(raw) {
-  const container = document.getElementById('variantCards');
-  const variants = [
-    { name: 'baseline', label: 'No optimization', prompt: raw, color: '#6b7a99' },
-    { name: 'role_only', label: 'Role prefix only', prompt: ROLE_PREFIX + raw, color: 'var(--accent)' },
-    { name: 'cot_only', label: 'CoT suffix only', prompt: raw + COT_SUFFIX, color: 'var(--accent2)' },
-    { name: 'no_fillers', label: 'Filler removal only', prompt: stripFillers(raw), color: 'var(--accent3)' },
-    { name: 'full', label: 'All techniques combined', prompt: ROLE_PREFIX + stripFillers(raw) + COT_SUFFIX, color: 'var(--accent4)' },
-  ];
-
-  container.innerHTML = variants.map(v => `
-    <div class="chart-card" style="border-left:3px solid ${v.color}">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div>
-          <span class="variant-badge badge-${v.name}">${v.name}</span>
-        </div>
-        <span style="font-size:11px;color:var(--text-muted)">${v.label}</span>
-      </div>
-      <pre style="font-family:Space Mono,monospace;font-size:11px;line-height:1.7;color:var(--text-muted);white-space:pre-wrap;word-break:break-word;max-height:80px;overflow:hidden">${escH(v.prompt.trim())}</pre>
-    </div>
-  `).join('');
+  refreshOptimizer();
 }
 
 function stripFillers(s) {
-  FILLERS.forEach(f => {
-    const re = new RegExp(`\\b${f}\\b`, 'gi');
-    s = s.replace(re, '');
-  });
-  return s.replace(/ {2,}/g, ' ').trim();
+  FILLERS.forEach(f => { s = s.replace(new RegExp(`\\b${f}\\b`,'gi'),''); });
+  return s.replace(/ {2,}/g,' ').trim();
 }
 
-// ─── CHARTS ──────────────────────────────────────────────────────────────
-const chartDefaults = {
-  plugins: { legend: { labels: { color: '#6b7a99', font: { family: 'Space Mono', size: 10 } } } },
-  scales: {
-    x: { ticks: { color: '#6b7a99', font: { family: 'Space Mono', size: 9 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
-    y: { ticks: { color: '#6b7a99', font: { family: 'Space Mono', size: 9 } }, grid: { color: 'rgba(255,255,255,0.04)' } }
-  }
-};
-
-let overviewChartInst, resultsChartsInited = false, metricsChartsInited = false;
-
-// Overview chart
-function initOverviewChart() {
-  const labels = RESULTS.map(r => r.variant);
-  const colors = RESULTS.map(r => COLORS[r.variant]);
-  const ctx = document.getElementById('overviewChart').getContext('2d');
-  overviewChartInst = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        { label: 'ROUGE-1', data: RESULTS.map(r=>r.r1), backgroundColor: 'rgba(79,195,247,0.7)', borderRadius: 6 },
-        { label: 'ROUGE-2', data: RESULTS.map(r=>r.r2), backgroundColor: 'rgba(124,111,223,0.7)', borderRadius: 6 },
-        { label: 'ROUGE-L', data: RESULTS.map(r=>r.rl), backgroundColor: 'rgba(245,158,11,0.7)', borderRadius: 6 },
-        { label: 'BLEU',    data: RESULTS.map(r=>r.bleu), backgroundColor: 'rgba(52,211,153,0.7)', borderRadius: 6 },
-      ]
-    },
-    options: { ...chartDefaults, responsive: true, barPercentage: 0.7 }
-  });
-}
-
-function initResultsCharts() {
-  if (resultsChartsInited) return;
-  resultsChartsInited = true;
-
-  const labels = RESULTS.slice(0,5).map(r => r.variant);
-  const maxR1 = Math.max(...RESULTS.map(r=>r.r1));
-
-  // ROUGE chart
-  const ctxR = document.getElementById('rougeChart').getContext('2d');
-  new Chart(ctxR, {
-    type: 'bar',
-    data: {
-      labels: RESULTS.map(r=>r.variant),
-      datasets: [
-        { label: 'ROUGE-1', data: RESULTS.map(r=>r.r1), backgroundColor: 'rgba(79,195,247,0.8)', borderRadius: 5 },
-        { label: 'ROUGE-2', data: RESULTS.map(r=>r.r2), backgroundColor: 'rgba(124,111,223,0.8)', borderRadius: 5 },
-        { label: 'ROUGE-L', data: RESULTS.map(r=>r.rl), backgroundColor: 'rgba(245,158,11,0.8)', borderRadius: 5 },
-      ]
-    },
-    options: { ...chartDefaults, responsive: true }
-  });
-
-  // BLEU chart
-  const ctxB = document.getElementById('bleuChart').getContext('2d');
-  new Chart(ctxB, {
-    type: 'bar',
-    data: {
-      labels: RESULTS.map(r=>r.variant),
-      datasets: [{ label: 'BLEU', data: RESULTS.map(r=>r.bleu), backgroundColor: RESULTS.map(r=>`${COLORS[r.variant]}cc`), borderRadius: 6 }]
-    },
-    options: { ...chartDefaults, responsive: true }
-  });
-
-  // Radar
-  const ctxRad = document.getElementById('radarChart').getContext('2d');
-  new Chart(ctxRad, {
-    type: 'radar',
-    data: {
-      labels: ['ROUGE-1','ROUGE-2','ROUGE-L','BLEU (×3)'],
-      datasets: RESULTS.slice(0,5).map(r => ({
-        label: r.variant,
-        data: [r.r1, r.r2, r.rl, r.bleu * 3],
-        borderColor: COLORS[r.variant],
-        backgroundColor: COLORS[r.variant] + '22',
-        pointBackgroundColor: COLORS[r.variant],
-        borderWidth: 2,
-      }))
-    },
-    options: {
-      plugins: { legend: { labels: { color: '#6b7a99', font: { family: 'Space Mono', size: 9 } } } },
-      scales: { r: { ticks: { color: '#6b7a99', backdropColor: 'transparent', font: { size: 8 } }, grid: { color: 'rgba(255,255,255,0.06)' }, pointLabels: { color: '#e8edf5', font: { family: 'Syne', size: 12, weight: '600' } } } },
-      responsive: true
-    }
-  });
-
-  // Fill results table
-  const tbody = document.getElementById('resultsBody');
-  RESULTS.forEach((r, i) => {
-    const maxR1 = Math.max(...RESULTS.map(x=>x.r1));
-    const maxRL = Math.max(...RESULTS.map(x=>x.rl));
-    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
-    tbody.innerHTML += `
-      <tr>
-        <td><span class="variant-badge badge-${r.variant}">${r.variant}</span></td>
-        <td>${r.n}</td>
-        <td>
-          <div class="metric-bar-wrap">
-            <span class="${rankClass}">${r.r1.toFixed(4)}</span>
-            <div class="metric-bar"><div class="metric-bar-fill" style="width:${(r.r1/maxR1*100).toFixed(1)}%;background:var(--accent)"></div></div>
-          </div>
-        </td>
-        <td>${r.r2.toFixed(4)}</td>
-        <td>
-          <div class="metric-bar-wrap">
-            <span class="${rankClass}">${r.rl.toFixed(4)}</span>
-            <div class="metric-bar"><div class="metric-bar-fill" style="width:${(r.rl/maxRL*100).toFixed(1)}%;background:var(--accent3)"></div></div>
-          </div>
-        </td>
-        <td>${r.bleu.toFixed(4)}</td>
-      </tr>`;
-  });
-}
-
-function initMetricsCharts() {
-  if (metricsChartsInited) return;
-  metricsChartsInited = true;
-
-  const ctx = document.getElementById('heatmapChart').getContext('2d');
-  new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: RESULTS.map(r => r.variant),
-      datasets: [
-        { label: 'ROUGE-1', data: RESULTS.map(r=>r.r1), backgroundColor: 'rgba(79,195,247,0.75)', borderRadius: 4 },
-        { label: 'ROUGE-2', data: RESULTS.map(r=>r.r2), backgroundColor: 'rgba(124,111,223,0.75)', borderRadius: 4 },
-        { label: 'ROUGE-L', data: RESULTS.map(r=>r.rl), backgroundColor: 'rgba(245,158,11,0.75)', borderRadius: 4 },
-        { label: 'BLEU×3',  data: RESULTS.map(r=>r.bleu*3), backgroundColor: 'rgba(52,211,153,0.75)', borderRadius: 4 },
-      ]
-    },
-    options: { ...chartDefaults, responsive: true, barPercentage: 0.8 }
-  });
-}
-
-// ─── INIT ──────────────────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
-  initOverviewChart();
-  updateOptimizer();
-});
-
-// ─── TRY IT PAGE ──────────────────────────────────────────────────────
-const ROLE_PREFIX_FULL = `You are a precise and concise summarization assistant. Your task is to carefully read the following passage and produce a clear, factual, and well-structured summary.\n\n`;
-const COT_SUFFIX_FULL  = `\n\nThink step by step: identify the key ideas first, then write the summary in your own words.`;
-const FILLERS_LIST = ['please','kindly','just','basically','actually','very','really','simply'];
-const RAW_INSTR = "Summarize the following article:";
-
-const VARIANT_COLORS2 = {
-  baseline:   '#6b7a99',
-  role_only:  '#4fc3f7',
-  cot_only:   '#7c6fdf',
-  no_fillers: '#f59e0b',
-  full:       '#34d399',
-};
-
-const VARIANT_DESC = {
-  baseline:   'No optimization applied',
-  role_only:  'Role prefix only',
-  cot_only:   'Chain-of-thought suffix only',
-  no_fillers: 'Filler word removal only',
-  full:       'All three techniques combined',
-};
-
-const SAMPLES = {
-  news: `Scientists at MIT have developed a new type of solar panel that can generate electricity even at night by capturing radiant heat from the Earth's surface. The device, called a thermoradiative cell, works by emitting infrared radiation into the cold night sky and harvesting the energy difference between the warm Earth and the cold atmosphere. In lab tests, the panel produced about 50 milliwatts of power per square meter — roughly one-quarter of what a conventional solar panel generates during the day. Researchers say the technology could eventually be integrated with existing solar installations to extend their power generation around the clock. The team published their findings in the journal Applied Physics Letters and noted that further improvements to materials could significantly boost efficiency. While still in early stages, the technology represents a promising step toward continuous renewable energy generation without batteries or energy storage systems.`,
-
-  tech: `OpenAI has released GPT-4o, a new multimodal AI model that can reason across audio, vision, and text in real time. The model significantly reduces latency compared to previous systems, responding to voice queries in as little as 232 milliseconds — comparable to human conversation speed. GPT-4o can detect emotions from tone of voice, read handwritten equations, and interpret facial expressions during video calls. Unlike earlier versions that relied on three separate models for transcription, reasoning, and synthesis, GPT-4o integrates all modalities into a single end-to-end trained neural network. The company demonstrated the model live, showing it help a user solve math problems by pointing a camera at their notebook. GPT-4o is being rolled out gradually to ChatGPT Plus subscribers and developers via the API. Experts say the seamless multimodal capabilities represent a significant leap in making AI assistants feel more natural and responsive in everyday interactions.`,
-};
-
-function stripFillersFromText(s) {
-  FILLERS_LIST.forEach(f => {
-    const re = new RegExp(`\\b${f}\\b`, 'gi');
-    s = s.replace(re, '');
-  });
-  return s.replace(/ {2,}/g, ' ').trim();
-}
-
-function buildVariantPrompt(variantName, article) {
-  let instr = RAW_INSTR;
-  switch (variantName) {
-    case 'baseline':
-      return `${instr}\n\n${article}`;
-    case 'role_only':
-      return `${ROLE_PREFIX_FULL}${instr}\n\n${article}`;
-    case 'cot_only':
-      return `${instr}${COT_SUFFIX_FULL}\n\n${article}`;
-    case 'no_fillers':
-      return `${stripFillersFromText(instr)}\n\n${article}`;
-    case 'full':
-      return `${ROLE_PREFIX_FULL}${stripFillersFromText(instr)}${COT_SUFFIX_FULL}\n\n${article}`;
+function buildPrompt(raw, variant) {
+  switch(variant) {
+    case 'baseline':  return `${raw}\n\n[article]`;
+    case 'role_only': return `${ROLE_PFX}${raw}\n\n[article]`;
+    case 'cot_only':  return `${raw}${COT_SFX}\n\n[article]`;
+    case 'no_fillers':return `${stripFillers(raw)}\n\n[article]`;
+    case 'full':      return `${ROLE_PFX}${stripFillers(raw)}${COT_SFX}\n\n[article]`;
   }
 }
 
-function onArticleInput() {
-  const text = document.getElementById('articleInput').value;
-  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-  document.getElementById('wordCountBadge').textContent = `${words} word${words !== 1 ? 's' : ''}`;
-  const longBadge = document.getElementById('longDocBadge');
-  longBadge.style.display = words > 300 ? 'inline-flex' : 'none';
+function refreshOptimizer() {
+  const raw = document.getElementById('rawPrompt').value;
+  let out = '';
+  if (OPT.role)   out += `<span class="hl-role">${esc(ROLE_PFX)}</span>`;
+  let p = raw;
+  if (OPT.filter) FILLERS.forEach(f => { p = p.replace(new RegExp(`\\b${f}\\b`,'gi'), m=>`<span class="hl-stripped">${m}</span>`); });
+  out += esc(p).replace(/&lt;span/g,'<span').replace(/&gt;<\/span&gt;/g,'></span>').replace(/span&gt;/g,'span>');
+  // simpler: just render processed text
+  out = '';
+  if (OPT.role) out += `<span class="hl-role">${ROLE_PFX}</span>`;
+  let processed = raw;
+  if (OPT.filter) {
+    FILLERS.forEach(f => { processed = processed.replace(new RegExp(`\\b${f}\\b`,'gi'), ''); });
+    processed = processed.replace(/ {2,}/g,' ').trim();
+  }
+  out += processed;
+  if (OPT.cot) out += `<span class="hl-cot">${COT_SFX}</span>`;
+  document.getElementById('optOut').innerHTML = out;
+
+  // Build variant cards
+  const variants = ['baseline','role_only','cot_only','no_fillers','full'];
+  document.getElementById('variantPreviews').innerHTML = variants.map(v => {
+    const prompt = buildPrompt(raw, v);
+    return `<div class="card" style="border-left:3px solid ${VCOL[v]}">
+      <div class="card-header" style="padding:12px 18px">
+        <span class="badge badge-${v}">${v}</span>
+        <span style="font-size:12px;color:var(--text3)">${VARIANT_DESC[v]}</span>
+      </div>
+      <div style="padding:14px 18px;font-family:'Geist Mono',monospace;font-size:11px;line-height:1.7;color:var(--text2);max-height:70px;overflow:hidden;white-space:pre-wrap;word-break:break-word">${esc(prompt)}</div>
+    </div>`;
+  }).join('');
 }
 
-function loadSample(key) {
-  document.getElementById('articleInput').value = SAMPLES[key];
-  onArticleInput();
+// ════════════════════════════════════════════════════════
+// SUMMARIZE
+// ════════════════════════════════════════════════════════
+const VARIANT_OPTS = ['baseline','role_only','cot_only','no_fillers','full'];
+const dotColors = { baseline:'#4a5068', role_only:'#1a4a8a', cot_only:'#5a3a8a', no_fillers:'#b85c00', full:'#1a6a3a' };
+
+(function buildVariantChecks() {
+  const cont = document.getElementById('variantChecks');
+  VARIANT_OPTS.forEach(v => {
+    const lbl = document.createElement('label');
+    lbl.className = 'vcheck checked';
+    lbl.style.setProperty('--dot-color', dotColors[v]);
+    lbl.innerHTML = `<input type="checkbox" value="${v}" checked onchange="updateCheckStyle(this)">
+      <div class="vcheck-dot"></div>
+      <div>
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600">${v}</div>
+        <div style="font-size:11px;color:var(--text3);line-height:1.3">${VARIANT_DESC[v].split('—')[0].trim()}</div>
+      </div>`;
+    cont.appendChild(lbl);
+  });
+})();
+
+function updateCheckStyle(cb) {
+  cb.closest('.vcheck').classList.toggle('checked', cb.checked);
 }
 
-function clearInput() {
+function toggleAll() {
+  const cbs = document.querySelectorAll('#variantChecks input');
+  const allOn = [...cbs].every(c=>c.checked);
+  cbs.forEach(c => { c.checked = !allOn; updateCheckStyle(c); });
+}
+
+function onArticleType() {
+  const txt = document.getElementById('articleInput').value;
+  const wc = txt.trim() ? txt.trim().split(/\s+/).length : 0;
+  document.getElementById('wordCount').textContent = `${wc} word${wc!==1?'s':''}`;
+  document.getElementById('longDocTag').style.display = wc>300 ? 'inline-flex' : 'none';
+}
+
+function loadSample(k) {
+  document.getElementById('articleInput').value = SAMPLES[k];
+  onArticleType();
+}
+
+function clearArticle() {
   document.getElementById('articleInput').value = '';
-  onArticleInput();
-  document.getElementById('tryitResults').style.display = 'none';
-  document.getElementById('tryitEmpty').style.display = 'block';
+  onArticleType();
+  document.getElementById('sumOutput').style.display = 'none';
 }
 
-function getSelectedVariants() {
-  return [...document.querySelectorAll('.variant-check input:checked')].map(cb => cb.value);
-}
-
-async function runSummarization() {
-  const article = document.getElementById('articleInput').value.trim();
-  if (!article || article.split(/\s+/).length < 20) {
-    alert('Please paste a longer article (at least 20 words) for good results.');
-    return;
+function buildFullPrompt(variant, article) {
+  const RAW = "Summarize the following article:";
+  switch(variant) {
+    case 'baseline':   return `${RAW}\n\n${article}`;
+    case 'role_only':  return `${ROLE_PFX}${RAW}\n\n${article}`;
+    case 'cot_only':   return `${RAW}${COT_SFX}\n\n${article}`;
+    case 'no_fillers': return `${stripFillers(RAW)}\n\n${article}`;
+    case 'full':       return `${ROLE_PFX}${stripFillers(RAW)}${COT_SFX}\n\n${article}`;
   }
+}
 
-  const selected = getSelectedVariants();
-  if (!selected.length) { alert('Please select at least one variant.'); return; }
+async function runSummarize() {
+  const article = document.getElementById('articleInput').value.trim();
+  if (!article || article.split(/\s+/).length < 20) { toast('Please paste a longer article (20+ words).'); return; }
+  const selected = [...document.querySelectorAll('#variantChecks input:checked')].map(c=>c.value);
+  if (!selected.length) { toast('Select at least one variant.'); return; }
 
-  // UI: loading state
   const btn = document.getElementById('runBtn');
   btn.disabled = true;
-  document.getElementById('runBtnIcon').outerHTML = `<span class="spinner" id="runBtnIcon"></span>`;
-  document.getElementById('runBtnText').textContent = 'Generating summaries…';
+  document.getElementById('runIcon').outerHTML = `<span class="spinner" id="runIcon"></span>`;
+  document.getElementById('runTxt').textContent = `Generating ${selected.length} summaries…`;
 
-  document.getElementById('tryitEmpty').style.display = 'none';
-  document.getElementById('tryitResults').style.display = 'block';
+  document.getElementById('sumOutput').style.display = 'block';
+  document.getElementById('sumSubtitle').textContent = `${selected.length} variant${selected.length>1?'s':''} · ${article.split(/\s+/).length} words input`;
 
-  const grid = document.getElementById('summaryGrid');
+  const grid = document.getElementById('sumGrid');
   grid.innerHTML = '';
+  grid.style.gridTemplateColumns = selected.length <= 2 ? '1fr '.repeat(selected.length) : '1fr 1fr';
 
-  // Create placeholder cards
   const cardMap = {};
-  selected.forEach((v, i) => {
+  selected.forEach((v,i) => {
     const card = document.createElement('div');
-    card.className = 'summary-card';
-    card.style.animationDelay = `${i * 0.07}s`;
-    card.style.borderTopColor = VARIANT_COLORS2[v];
-    card.style.borderTopWidth = '2px';
+    card.className = 'sum-card fade-up';
+    card.style.animationDelay = `${i*0.06}s`;
+    card.style.borderTop = `2.5px solid ${VCOL[v]}`;
     card.innerHTML = `
-      <div class="summary-card-header">
-        <span class="variant-badge badge-${v}">${v}</span>
-        <span style="font-size:11px;color:var(--text-muted)">${VARIANT_DESC[v]}</span>
+      <div class="sum-card-top">
+        <span class="badge badge-${v}">${v}</span>
+        <span style="font-size:11px;color:var(--text3)">${VARIANT_DESC[v].split('—')[0].trim()}</span>
       </div>
-      <div class="summary-card-body loading" id="body-${v}">
-        <div class="loading-dots"><span></span><span></span><span></span></div>
-        <span>Generating…</span>
+      <div class="sum-card-body loading" id="sumBody-${v}">
+        <div class="dots"><span></span><span></span><span></span></div> Generating…
       </div>
-      <div class="summary-card-footer">
-        <span class="card-meta" id="meta-${v}">—</span>
-        <button class="copy-btn" id="copy-${v}" onclick="copyCard('${v}')" disabled>Copy</button>
+      <div class="sum-card-foot">
+        <span class="sum-meta" id="sumMeta-${v}">—</span>
+        <button class="btn btn-ghost btn-sm" id="sumCopy-${v}" onclick="copyText('sumBody-${v}','sumCopy-${v}')" disabled>Copy</button>
       </div>`;
     grid.appendChild(card);
     cardMap[v] = card;
   });
 
-  // Subtitle
-  document.getElementById('tryitSubtitle').textContent =
-    `${selected.length} variant${selected.length > 1 ? 's' : ''} · ${article.split(/\s+/).length} words input`;
-
-  // Run all variants in parallel via Claude API
-  const promises = selected.map(v => summarizeVariant(v, article));
-  const results = await Promise.allSettled(promises);
-
+  // Run in parallel
+  const results = await Promise.allSettled(selected.map(v => callClaude(buildFullPrompt(v, article))));
   results.forEach((res, i) => {
     const v = selected[i];
-    const bodyEl = document.getElementById(`body-${v}`);
-    const metaEl = document.getElementById(`meta-${v}`);
-    const copyEl = document.getElementById(`copy-${v}`);
-
+    const bodyEl = document.getElementById(`sumBody-${v}`);
+    const metaEl = document.getElementById(`sumMeta-${v}`);
+    const copyEl = document.getElementById(`sumCopy-${v}`);
     if (res.status === 'fulfilled') {
-      const { summary, tokens, ms } = res.value;
-      bodyEl.className = 'summary-card-body';
-      bodyEl.textContent = summary;
-      metaEl.textContent = `~${tokens} tokens · ${ms}ms`;
+      bodyEl.className = 'sum-card-body';
+      bodyEl.textContent = res.value.text;
+      metaEl.textContent = `~${res.value.tokens} tok · ${res.value.ms}ms`;
       copyEl.disabled = false;
-      copyEl.dataset.text = summary;
     } else {
-      bodyEl.className = 'summary-card-body';
-      bodyEl.innerHTML = `<div class="error-card">⚠ ${res.reason?.message || 'Generation failed'}</div>`;
+      bodyEl.className = 'sum-card-body';
+      bodyEl.innerHTML = `<div class="err-box">⚠ ${res.reason?.message||'API error'}</div>`;
       metaEl.textContent = 'error';
     }
   });
 
-  // Show prompt comparison
-  buildPromptComparison(selected, article);
+  // Prompt diff
+  const diffCont = document.getElementById('promptDiff');
+  diffCont.innerHTML = selected.map(v => `
+    <div style="border-bottom:1px solid var(--rule2)">
+      <div style="padding:10px 20px;background:var(--paper);display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--rule2)">
+        <span class="badge badge-${v}">${v}</span>
+        <span style="font-size:12px;color:var(--text3);margin-left:auto;font-family:'Geist Mono',monospace">${buildFullPrompt(v,article).length} chars</span>
+      </div>
+      <pre style="border-radius:0;max-height:90px;overflow:hidden;position:relative;background:var(--ink2)">${esc(buildFullPrompt(v,article).slice(0,400))}${buildFullPrompt(v,article).length>400?'\n…':''}</pre>
+    </div>`).join('');
 
-  // Restore button
   btn.disabled = false;
-  document.getElementById('runBtnIcon').outerHTML = `<span id="runBtnIcon">▶</span>`;
-  document.getElementById('runBtnText').textContent = 'Run Prompt Optimization';
+  document.getElementById('runIcon').outerHTML = `<span id="runIcon">▶</span>`;
+  document.getElementById('runTxt').textContent = 'Run Prompt Optimization';
 }
 
-async function summarizeVariant(variantName, article) {
-  const fullPrompt = buildVariantPrompt(variantName, article);
+// ════════════════════════════════════════════════════════
+// EVALUATE
+// ════════════════════════════════════════════════════════
+function runEval() {
+  const gen = document.getElementById('evalGen').value.trim();
+  const ref = document.getElementById('evalRef').value.trim();
+  if (!gen || !ref) { toast('Paste both a generated and reference summary.'); return; }
+
+  const scores = computeScores(gen, ref);
+
+  document.getElementById('evalEmpty').style.display = 'none';
+  document.getElementById('evalResults').style.display = 'block';
+
+  const maxMetric = 1;
+  document.getElementById('evalStrip').innerHTML = [
+    { label:'ROUGE-1', val:scores.r1, color:'var(--blue)' },
+    { label:'ROUGE-2', val:scores.r2, color:'var(--purple)' },
+    { label:'ROUGE-L', val:scores.rl, color:'var(--teal)' },
+    { label:'BLEU',    val:scores.bleu, color:'var(--amber)' },
+  ].map((m,i) => `<div class="stat-item">
+    <div class="stat-label">${m.label}</div>
+    <div class="stat-val" style="color:${m.color};font-size:32px">${m.val.toFixed(4)}</div>
+    <div class="stat-sub">${getInterpretation(m.label, m.val)}</div>
+    <div class="stat-accent" style="--accent-color:${m.color}"></div>
+  </div>`).join('');
+
+  document.getElementById('evalBreakdown').innerHTML = `
+    <div style="margin-bottom:20px">
+      ${[
+        { name:'ROUGE-1', val:scores.r1, max:0.5, col:'var(--blue)', desc:'Unigram overlap — how many individual words match.' },
+        { name:'ROUGE-2', val:scores.r2, max:0.3, col:'var(--purple)', desc:'Bigram overlap — two-word sequence matches.' },
+        { name:'ROUGE-L', val:scores.rl, max:0.4, col:'var(--teal)', desc:'Longest common subsequence — fluency proxy.' },
+        { name:'BLEU',    val:scores.bleu, max:0.2, col:'var(--amber)', desc:'N-gram precision with brevity penalty.' },
+      ].map(m=>`<div style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:600">${m.name}</span>
+          <span style="font-family:'Geist Mono',monospace;font-size:13px;color:${m.col}">${m.val.toFixed(4)}</span>
+        </div>
+        <div class="prog-bar" style="height:8px"><div class="prog-fill" style="width:${Math.min(100,(m.val/m.max*100)).toFixed(1)}%;background:${m.col}"></div></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">${m.desc}</div>
+      </div>`).join('')}
+    </div>
+    <div style="background:var(--paper);border-radius:9px;padding:14px 18px;border:1px solid var(--rule2)">
+      <div style="font-size:12px;color:var(--text2);line-height:1.7"><strong>Interpretation:</strong> ${getOverallInterpretation(scores)}</div>
+    </div>`;
+}
+
+// Simple ROUGE approximation (word overlap based, no stemming)
+function computeScores(gen, ref) {
+  const gWords = tokenize(gen);
+  const rWords = tokenize(ref);
+
+  // ROUGE-1
+  const r1 = fScore(ngramOverlap(gWords,rWords,1), gWords.length, rWords.length);
+
+  // ROUGE-2
+  const gBi = ngrams(gWords,2), rBi = ngrams(rWords,2);
+  const r2 = fScore(ngramOverlap(gBi,rBi,1), gBi.length, rBi.length);
+
+  // ROUGE-L (LCS)
+  const lcs = lcsLength(gWords, rWords);
+  const prec = gWords.length ? lcs/gWords.length : 0;
+  const rec  = rWords.length ? lcs/rWords.length : 0;
+  const rl = (prec+rec) ? 2*prec*rec/(prec+rec) : 0;
+
+  // BLEU (1-4 grams with brevity penalty)
+  const bp = Math.exp(Math.min(0, 1 - rWords.length/Math.max(gWords.length,1)));
+  let bleuSum = 0, count = 0;
+  for (let n=1; n<=Math.min(4,gWords.length); n++) {
+    const gNg = ngrams(gWords,n), rNg = ngrams(rWords,n);
+    const ov = ngramOverlap(gNg,rNg,1);
+    if (gNg.length > 0) { bleuSum += Math.log(ov/gNg.length + 1e-10); count++; }
+  }
+  const bleu = count ? bp * Math.exp(bleuSum/count) : 0;
+
+  return { r1: clamp(r1,0,1), r2: clamp(r2,0,1), rl: clamp(rl,0,1), bleu: clamp(bleu,0,1) };
+}
+
+function tokenize(s) { return s.toLowerCase().match(/\b\w+\b/g) || []; }
+function ngrams(words, n) { const out=[]; for(let i=0;i<=words.length-n;i++) out.push(words.slice(i,i+n).join(' ')); return out; }
+function ngramOverlap(a, b, _) { const bSet={}; b.forEach(x=>bSet[x]=(bSet[x]||0)+1); let ov=0; a.forEach(x=>{ if(bSet[x]>0){ov++;bSet[x]--;} }); return ov; }
+function fScore(ov, gl, rl) { const p=gl?ov/gl:0, r=rl?ov/rl:0; return (p+r)?(2*p*r/(p+r)):0; }
+function lcsLength(a,b) {
+  const m=a.length,n=b.length;
+  const dp=Array.from({length:m+1},()=>new Array(n+1).fill(0));
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++) dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]+1:Math.max(dp[i-1][j],dp[i][j-1]);
+  return dp[m][n];
+}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+function getInterpretation(metric, val) {
+  const thresholds = {
+    'ROUGE-1': [[0.35,'Low'],[0.42,'Good'],[0.5,'Strong'],[Infinity,'Excellent']],
+    'ROUGE-2': [[0.12,'Low'],[0.18,'Good'],[0.25,'Strong'],[Infinity,'Excellent']],
+    'ROUGE-L': [[0.25,'Low'],[0.30,'Good'],[0.38,'Strong'],[Infinity,'Excellent']],
+    'BLEU':    [[0.08,'Low'],[0.13,'Good'],[0.20,'Strong'],[Infinity,'Excellent']],
+  };
+  return (thresholds[metric]||[]).find(([t])=>val<t)?.[1] || 'Good';
+}
+
+function getOverallInterpretation(s) {
+  const avg = (s.r1+s.r2+s.rl+s.bleu)/4;
+  if (avg > 0.3) return 'Strong match with the reference. The generated summary captures key content well.';
+  if (avg > 0.18) return 'Moderate match. The summary covers some key points but may miss details or use different phrasing.';
+  return 'Low match. Significant differences in content or wording versus the reference.';
+}
+
+function loadEvalSample() {
+  document.getElementById('evalGen').value = 'Scientists have discovered a protein that may slow the aging process in mice. The study, published in Science, found that restoring levels of GDF11 protein reversed signs of aging in muscle and heart tissue.';
+  document.getElementById('evalRef').value = DATASET_ARTICLES[5].ref;
+  document.getElementById('evalEmpty').style.display = 'none';
+  document.getElementById('evalResults').style.display = 'none';
+}
+
+// ════════════════════════════════════════════════════════
+// CHARTS
+// ════════════════════════════════════════════════════════
+let chartsInited = false;
+function initResultsCharts() {
+  if (chartsInited) return;
+  chartsInited = true;
+
+  const cDefaults = {
+    plugins: { legend: { labels: { color:'#4a5068', font:{family:'Geist Mono',size:10} } } },
+    scales: {
+      x: { ticks:{color:'#8892a4',font:{family:'Geist Mono',size:9}}, grid:{color:'rgba(0,0,0,0.04)'} },
+      y: { ticks:{color:'#8892a4',font:{family:'Geist Mono',size:9}}, grid:{color:'rgba(0,0,0,0.04)'} }
+    }
+  };
+
+  const labels = RESULTS.map(r=>r.variant);
+  const bgColors = RESULTS.map(r=>VCOL[r.variant]+'cc');
+
+  new Chart(document.getElementById('rougeChart').getContext('2d'), {
+    type:'bar',
+    data: { labels,
+      datasets: [
+        { label:'ROUGE-1', data:RESULTS.map(r=>r.r1), backgroundColor:'rgba(26,74,138,0.7)', borderRadius:5 },
+        { label:'ROUGE-2', data:RESULTS.map(r=>r.r2), backgroundColor:'rgba(90,58,138,0.7)', borderRadius:5 },
+        { label:'ROUGE-L', data:RESULTS.map(r=>r.rl), backgroundColor:'rgba(26,122,106,0.7)', borderRadius:5 },
+      ]
+    },
+    options: { ...cDefaults, responsive:true }
+  });
+
+  new Chart(document.getElementById('bleuChart').getContext('2d'), {
+    type:'bar',
+    data: { labels, datasets:[{ label:'BLEU', data:RESULTS.map(r=>r.bleu), backgroundColor:bgColors, borderRadius:6 }] },
+    options: { ...cDefaults, responsive:true }
+  });
+
+  const hmLabels = RESULTS.map(r=>r.variant);
+  new Chart(document.getElementById('heatmapChart').getContext('2d'), {
+    type:'bar',
+    data: { labels:hmLabels,
+      datasets: [
+        { label:'ROUGE-1', data:RESULTS.map(r=>r.r1), backgroundColor:'rgba(26,74,138,0.75)', borderRadius:4 },
+        { label:'ROUGE-2', data:RESULTS.map(r=>r.r2), backgroundColor:'rgba(90,58,138,0.75)', borderRadius:4 },
+        { label:'ROUGE-L', data:RESULTS.map(r=>r.rl), backgroundColor:'rgba(26,122,106,0.75)', borderRadius:4 },
+        { label:'BLEU×3',  data:RESULTS.map(r=>r.bleu*3), backgroundColor:'rgba(184,92,0,0.75)', borderRadius:4 },
+      ]
+    },
+    options: { ...cDefaults, responsive:true, barPercentage:0.85 }
+  });
+}
+
+// ════════════════════════════════════════════════════════
+// DATASET
+// ════════════════════════════════════════════════════════
+let dsData = [...DATASET_ARTICLES];
+
+function filterDataset() {
+  const f = document.getElementById('filterLong').value;
+  let d = DATASET_ARTICLES;
+  if (f==='long') d = d.filter(a=>a.is_long);
+  if (f==='short') d = d.filter(a=>!a.is_long);
+  renderDataset(d);
+}
+
+function shuffleDataset() {
+  const d = [...DATASET_ARTICLES].sort(()=>Math.random()-0.5);
+  renderDataset(d);
+}
+
+function renderDataset(articles) {
+  const cont = document.getElementById('datasetList');
+  if (!articles.length) { cont.innerHTML = '<div class="empty"><div class="empty-icon">◎</div><div class="empty-title">No articles match filter</div></div>'; return; }
+  cont.innerHTML = articles.map((a,i) => `
+    <div style="padding:18px 24px;border-bottom:1px solid var(--rule2);transition:background 0.15s" onmouseenter="this.style.background='var(--paper)'" onmouseleave="this.style.background=''">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <span style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--text3)">${a.id}</span>
+        <span style="font-family:'Geist Mono',monospace;font-size:10px;background:var(--paper2);padding:2px 7px;border-radius:20px;border:1px solid var(--rule2)">${a.words}w</span>
+        ${a.is_long ? `<span style="font-family:'Geist Mono',monospace;font-size:10px;background:var(--amber-bg);color:var(--amber);padding:2px 7px;border-radius:20px;border:1px solid rgba(184,92,0,0.2)">LONG</span>` : '<span style="font-family:\'Geist Mono\',monospace;font-size:10px;background:var(--green-bg);color:var(--green);padding:2px 7px;border-radius:20px;border:1px solid rgba(26,106,58,0.2)">SHORT</span>'}
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="sendToSummarizer(${i})">→ Summarize</button>
+      </div>
+      <div style="font-size:13.5px;line-height:1.7;color:var(--text);margin-bottom:8px">${a.article.slice(0,220)}…</div>
+      <div style="font-size:12px;color:var(--text3);background:var(--paper2);border-radius:7px;padding:8px 12px;border:1px solid var(--rule2)">
+        <strong style="font-family:'Geist Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text3)">Reference: </strong>${a.ref}
+      </div>
+    </div>`).join('');
+}
+
+function sendToSummarizer(i) {
+  const article = DATASET_ARTICLES[i].article;
+  nav('summarize');
+  setTimeout(() => {
+    document.getElementById('articleInput').value = article;
+    onArticleType();
+    toast('Article loaded → Run Prompt Optimization to summarize');
+  }, 100);
+}
+
+// ════════════════════════════════════════════════════════
+// ABOUT
+// ════════════════════════════════════════════════════════
+function initAbout() {
+  if (document.getElementById('archCards').children.length) return;
+
+  document.getElementById('archCards').innerHTML = ARCH_CARDS.map(c=>`
+    <div class="card">
+      <div class="card-header"><div class="card-title" style="color:${c.color}">${c.title}</div></div>
+      <div class="card-body"><p style="font-size:13px;color:var(--text2);white-space:pre-line;line-height:1.8">${c.body}</p></div>
+    </div>`).join('');
+
+  document.getElementById('datasetDocs').innerHTML = `
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header"><div class="card-title">CNN/DailyMail 3.0.0</div></div>
+      <div class="card-body">
+        <div class="grid-2" style="gap:12px;margin-bottom:16px">
+          ${[['Source','HuggingFace: abisee/cnn_dailymail'],['Version','3.0.0 (non-anonymized)'],['Train split','287,226 articles'],['Test split','11,490 articles'],['Fields used','article, highlights'],['Long doc threshold','> 300 words']].map(([k,v])=>`
+          <div style="background:var(--paper);border-radius:9px;padding:12px 16px;border:1px solid var(--rule2)">
+            <div style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:4px">${k}</div>
+            <div style="font-size:13.5px;font-weight:500">${v}</div>
+          </div>`).join('')}
+        </div>
+        <pre>from datasets import load_dataset
+
+ds = load_dataset("abisee/cnn_dailymail", "3.0.0", split="test")
+# → DatasetDict with 11,490 rows
+# Fields: id, article, highlights
+# Auto-cached at ~/.cache/huggingface/datasets/</pre>
+      </div>
+    </div>`;
+
+  document.getElementById('metricsDocs').innerHTML = [
+    { name:'ROUGE-1', color:'var(--blue)', body:'Unigram F1 between generated and reference. Most commonly reported. T5-small achieves 0.418 (role_only). State-of-the-art extractive models reach ~0.44.' },
+    { name:'ROUGE-2', color:'var(--purple)', body:'Bigram F1. More sensitive to fluency and correct word ordering. T5-small achieves 0.200 (role_only). Harder to score well on abstractive outputs.' },
+    { name:'ROUGE-L', color:'var(--teal)', body:'Longest Common Subsequence F1 — a sentence-level structural proxy. Best metric for comparing cross-model abstractive quality. Best: 0.298 (role_only).' },
+    { name:'BLEU', color:'var(--amber)', body:'Precision-based n-gram metric with brevity penalty. Traditionally used for translation; lower scores on summarization are normal. Best: 0.135 (role_only).' },
+  ].map(m=>`<div class="card" style="margin-bottom:14px;border-left:3px solid ${m.color}">
+    <div class="card-header"><div class="card-title" style="color:${m.color}">${m.name}</div></div>
+    <div class="card-body"><p style="font-size:13.5px;color:var(--text2);line-height:1.75">${m.body}</p></div>
+  </div>`).join('');
+
+  document.getElementById('reproDocs').innerHTML = `<div class="card">
+    <div class="card-header"><div class="card-title">Reproducibility Guide</div></div>
+    <div class="card-body">
+      <p style="font-size:13.5px;color:var(--text2);margin-bottom:16px">All random seeds are fixed to 42 across Python, NumPy, and PyTorch. The exact dataset sample is cached to <code>data/sample.jsonl</code> on first run.</p>
+      <pre>pip install -r requirements.txt
+python -c "import nltk; nltk.download('punkt')"
+
+# Run unit tests (no GPU / model download needed):
+python src/test_modules.py
+
+# Standard full pipeline:
+python src/pipeline.py --split test --sample 200 --max_new_tokens 150
+
+# Use cached data (skip re-downloading):
+python src/pipeline.py --use_cached --sample 200
+
+# Generate plots:
+python src/visualize_results.py \\
+    --summary results/summary_&lt;run_id&gt;.json \\
+    --log results/eval_log_&lt;run_id&gt;.jsonl</pre>
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════
+// CLAUDE API
+// ════════════════════════════════════════════════════════
+async function callClaude(userMsg) {
   const t0 = Date.now();
-
-  const sysPrompt = `You are a summarization assistant helping a university GenAI research project. 
-When given an article with instructions, produce ONLY the summary — no preamble, no "here is the summary", no labels. 
-Keep it concise: 2–4 sentences capturing the key facts.`;
-
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 1000,
-      system: sysPrompt,
-      messages: [{ role: 'user', content: fullPrompt }],
-    }),
+      system: 'You are a summarization assistant in a university GenAI research project. When given an article with instructions, produce ONLY the summary — no preamble, no labels, no "here is the summary". Keep it concise: 2–4 sentences capturing the key facts and figures.',
+      messages: [{ role:'user', content: userMsg }],
+    })
   });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err?.error?.message || `HTTP ${response.status}`);
+  if (!resp.ok) {
+    const e = await resp.json().catch(()=>({}));
+    throw new Error(e?.error?.message || `HTTP ${resp.status}`);
   }
-
-  const data = await response.json();
-  const ms = Date.now() - t0;
-  const summary = data.content?.find(b => b.type === 'text')?.text?.trim() || '';
-  const tokens = data.usage?.output_tokens || '?';
-  return { summary, tokens, ms };
+  const data = await resp.json();
+  return {
+    text: data.content?.find(b=>b.type==='text')?.text?.trim() || '',
+    tokens: data.usage?.output_tokens || '?',
+    ms: Date.now() - t0,
+  };
 }
 
-function buildPromptComparison(selected, article) {
-  const block = document.getElementById('comparisonBlock');
-  const container = document.getElementById('promptComparison');
-  block.style.display = 'block';
-  container.innerHTML = selected.map(v => {
-    const fullPrompt = buildVariantPrompt(v, article);
-    const preview = fullPrompt.slice(0, 300);
-    return `
-      <div class="prompt-compare-row">
-        <div class="prom-row-header">
-          <span class="variant-badge badge-${v}">${v}</span>
-          <span style="font-size:11px;color:var(--text-muted);margin-left:8px">${VARIANT_DESC[v]}</span>
-          <span style="margin-left:auto;font-family:'Space Mono',monospace;font-size:9px;color:var(--text-dim)">${fullPrompt.length} chars</span>
-        </div>
-        <div class="prom-row-body">${escHTML(preview)}${fullPrompt.length > 300 ? '…' : ''}</div>
-      </div>`;
-  }).join('');
+// ════════════════════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════════════════════
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
 }
 
-function escHTML(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function copyCard(variant) {
-  const btn = document.getElementById(`copy-${variant}`);
-  const text = btn.dataset.text;
-  navigator.clipboard.writeText(text).then(() => {
+function copyText(bodyId, btnId) {
+  const txt = document.getElementById(bodyId).textContent;
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = document.getElementById(btnId);
     btn.textContent = 'Copied!';
-    btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
+    setTimeout(()=>btn.textContent='Copy', 1800);
   });
 }
+
+// Init on load
+window.addEventListener('DOMContentLoaded', () => {
+  renderDataset(DATASET_ARTICLES);
+  refreshOptimizer();
+  initAbout();
+
+  // Pre-trigger rtab siblings
+  ['rtab-chart','rtab-heatmap','rtab-findings','atab-dataset','atab-metrics','atab-repro'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+});
 </script>
 </body>
 </html>
